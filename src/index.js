@@ -6,6 +6,7 @@ import EpicComponent from 'epic-component';
 import {ButtonToolbar, ButtonGroup, Button} from 'react-bootstrap';
 import classnames from 'classnames';
 import range from 'node-range';
+import {select, takeLatest, takeEvery} from 'redux-saga/effects';
 
 import 'font-awesome/css/font-awesome.css';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -49,7 +50,8 @@ function TaskBundle (bundle, deps) {
 
   bundle.defineView('Task', IntroSelector, Intro);
 
-  const WorkspaceActions = bundle.pack('submitAnswer', 'SaveButton', 'gridScrolled', 'colSelected', 'rowSelected', 'modeChanged');
+  const WorkspaceActions = bundle.pack('submitAnswer', 'SaveButton',
+    'gridMounted', 'gridScrolled', 'colSelected', 'rowSelected', 'modeChanged', 'rowMoved', 'colMoved');
   bundle.defineView('Workspace', WorkspaceSelector, Workspace(WorkspaceActions));
 
   bundle.defineAction('modeChanged', 'Grid.Mode.Changed');
@@ -57,6 +59,12 @@ function TaskBundle (bundle, deps) {
     const {mode} = action;
     return update(state,
       {workspace: {mode: {$set: mode}}});
+  });
+
+  bundle.defineAction('gridMounted', 'Grid.Mounted');
+  bundle.addReducer('gridMounted', function (state, action) {
+    const {grid} = action;
+    return update(state, {workspace: {grid: {$set: grid}}});
   });
 
   bundle.defineAction('gridScrolled', 'Grid.Scrolled');
@@ -85,6 +93,47 @@ function TaskBundle (bundle, deps) {
     }
     return update(state,
       {workspace: {selectedCol: {$apply: toggleSelection}}});
+  });
+
+  bundle.defineAction('rowMoved', 'Grid.Row.Moved');
+  bundle.addReducer('rowMoved', function (state, action) {
+    const {nRows, rowPerm} = state.dump;
+    const {row, direction} = action;
+    const newRow = row + direction;
+    if (newRow < 0 || newRow >= nRows) {
+      return state;
+    }
+    return update(state, {
+      workspace: {selectedRow: {$set: newRow}},
+      dump: {rowPerm: makePermSwap(rowPerm, row, newRow)}
+    });
+  });
+
+  bundle.defineAction('colMoved', 'Grid.Col.Moved');
+  bundle.addReducer('colMoved', function (state, action) {
+    const {nCols, colPerm} = state.dump;
+    const {col, direction} = action;
+    const newCol = col + direction;
+    if (newCol < 0 || newCol >= nCols) {
+      return state;
+    }
+    state = update(state, {
+      workspace: {selectedCol: {$set: newCol}},
+      dump: {colPerm: makePermSwap(colPerm, col, newCol)}
+    });
+    return state;
+  });
+
+  bundle.addSaga(function* () {
+    yield takeLatest(deps.gridMounted, function* (action) {
+      const {grid} = action;
+      if (grid) {
+        yield takeEvery([deps.rowSelected, deps.rowMoved], function* (action) {
+          const row = yield select(state => state.workspace.selectedRow);
+          grid.ensureRowVisible(row);
+        });
+      }
+    });
   });
 
 }
@@ -163,20 +212,26 @@ const Workspace = actions => EpicComponent(function (self) {
   const cellHeight = 20;
   const innerPadding = 2;
   const scrollSpace = 20;
+  const selectionHalo = 2; /* number of rows,cols visible around selection */
 
   self.render = function () {
     const {mode, selectedRow, selectedCol} = self.props.workspace;
-    console.log('select', selectedRow, selectedCol);
+    const isCols = mode === 'cols';
+    const isRows = mode === 'rows';
     return (
       <div>
         <p>Workspace</p>
         <ButtonToolbar>
           <ButtonGroup>
-            <Button style={{width: '40px'}} active={mode==='cols'} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
-            <Button style={{width: '40px'}} active={mode==='rows'} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
+            <Button style={{width: '40px'}} active={isCols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
+            <Button style={{width: '40px'}} active={isRows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
+            {isRows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowUp}><i className="fa fa-arrow-up"/></Button>}
+            {isRows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowDown}><i className="fa fa-arrow-down"/></Button>}
+            {isCols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLeft}><i className="fa fa-arrow-left"/></Button>}
+            {isCols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-arrow-right"/></Button>}
           </ButtonGroup>
         </ButtonToolbar>
-        <div className="text-grid" style={renderGridStyle()} onScroll={onScroll}>
+        <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
           {mode === 'rows' && renderRows()}
           {mode === 'cols' && renderCols()}
           {renderGridSizer()}
@@ -185,6 +240,33 @@ const Workspace = actions => EpicComponent(function (self) {
     );
   };
 
+  function refGrid (element) {
+    const grid = element && {
+      ensureRowVisible: function (row) {
+        const frame = getVisibleFrame(true);
+        if (row < frame.firstRow + selectionHalo) {
+          const firstRow = Math.max(0, row - selectionHalo);
+          element.scrollTop = firstRow * cellHeight;
+        }
+        if (row > frame.lastRow - 1 - selectionHalo) {
+          const firstRow = Math.max(0, row - maxVisibleRows + selectionHalo);
+          element.scrollTop = firstRow * cellHeight;
+        }
+      },
+      ensureColVisible: function (col) {
+        const frame = getVisibleFrame(true);
+        if (col < frame.firstCol + selectionHalo) {
+          const firstCol = Math.max(0, col - selectionHalo);
+          element.scrollLeft = firstCol * cellWidth;
+        }
+        if (col > frame.lastCol - 1 - selectionHalo) {
+          const firstRow = Math.max(0, col - maxVisibleCols + selectionHalo);
+          element.scrollLeft = firstCol * cellWidth;
+        }
+      }
+    };
+    self.props.dispatch({type: actions.gridMounted, grid});
+  }
   function onSwitchToCols () {
     self.props.dispatch({type: actions.modeChanged, mode: 'cols'});
   }
@@ -206,15 +288,33 @@ const Workspace = actions => EpicComponent(function (self) {
     const col = parseInt(event.currentTarget.getAttribute('data-col'));
     self.props.dispatch({type: actions.colSelected, col});
   }
+  function onMoveRowUp (event) {
+    const row = self.props.workspace.selectedRow;
+    self.props.dispatch({type: actions.rowMoved, row, direction: -1});
+  }
+  function onMoveRowDown (event) {
+    const row = self.props.workspace.selectedRow;
+    self.props.dispatch({type: actions.rowMoved, row, direction: 1});
+  }
+  function onMoveColLeft (event) {
+    const col = self.props.workspace.selectedCol;
+    self.props.dispatch({type: actions.colMoved, col, direction: -1});
+  }
+  function onMoveColRight (event) {
+    const col = self.props.workspace.selectedCol;
+    self.props.dispatch({type: actions.colMoved, col, direction: 1});
+  }
 
   /* grid and framing */
-  function getVisibleFrame () {
+  function getVisibleFrame (narrow) {
+    const extraRows = narrow ? 0 : extraRenderedRows;
+    const extraCols = narrow ? 0 : extraRenderedCols;
     const {cells, hPos, vPos, mode} = self.props.workspace;
     const {nCols, nRows} = self.props.dump;
-    const firstRow = Math.max(0, vPos - extraRenderedRows);
-    const lastRow = Math.min(nRows - 1, vPos + maxVisibleRows + extraRenderedRows);
-    const firstCol = Math.max(0, hPos - extraRenderedCols)
-    const lastCol = Math.min(nCols - 1, hPos + maxVisibleCols + extraRenderedCols);
+    const firstRow = Math.max(0, vPos - extraRows);
+    const lastRow = Math.min(nRows - 1, vPos + maxVisibleRows + extraRows);
+    const firstCol = Math.max(0, hPos - extraCols)
+    const lastCol = Math.min(nCols - 1, hPos + maxVisibleCols + extraCols);
     return {firstRow, lastRow, firstCol, lastCol};
   }
   function renderGridSizer () {
@@ -406,3 +506,9 @@ function textToCells (alphabet, textStr) {
   return cells;
 }
 
+function makePermSwap (perm, i, j) {
+  return {
+    [i]: {$set: perm[j]},
+    [j]: {$set: perm[i]}
+  };
+}
