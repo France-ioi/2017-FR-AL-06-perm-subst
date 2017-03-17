@@ -1,5 +1,5 @@
 
-.text-grid, .subst-symbol {
+.text-grid, .subst-symbol, textarea {
   font-family: monospace;
 }
 .text-grid {

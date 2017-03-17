@@ -59,7 +59,7 @@ function TaskBundle (bundle, deps) {
   const WorkspaceActions = bundle.pack('submitAnswer', 'SaveButton',
     'gridMounted', 'gridScrolled', 'gridResized',
     'colSelected', 'rowSelected', 'modeChanged', 'rowMoved', 'colMoved',
-    'substItemsSwapped', 'substItemLocked'
+    'substItemsSwapped', 'substItemLocked', 'cipherTextChanged'
   );
   bundle.defineView('Workspace', WorkspaceSelector, Workspace(WorkspaceActions));
 
@@ -155,6 +155,14 @@ function TaskBundle (bundle, deps) {
     return update(state, {
       dump: {substitution: {[rank]: {locked: {$apply: b => !b}}}}
     });
+  });
+
+  bundle.defineAction('cipherTextChanged', 'Task.CipherText.Changed');
+  bundle.addReducer('cipherTextChanged', function (state, action) {
+    const {text} = action;
+    const task = {cipher_text: text};
+    const dump = makeDump(task, 40);
+    return initWorkspace({...state, task}, dump);
   });
 
   bundle.addSaga(function* () {
@@ -277,6 +285,10 @@ const Workspace = actions => EpicComponent(function (self) {
           {mode === 'cols' && renderCols()}
           {renderGridSizer()}
         </div>
+        <hr/>
+        <div>
+          <textarea rows='10' cols='60' value={self.props.task.cipher_text} onChange={onCipherTextChanged}/>
+        </div>
       </div>
     );
   };
@@ -356,6 +368,10 @@ const Workspace = actions => EpicComponent(function (self) {
   }
   function onSwapPairs (rank1, rank2) {
     self.props.dispatch({type: actions.substItemsSwapped, rank1, rank2});
+  }
+  function onCipherTextChanged (event) {
+    const text = event.target.value;
+    self.props.dispatch({type: actions.cipherTextChanged, text});
   }
 
   /* grid and framing */
