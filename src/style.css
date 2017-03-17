@@ -1,12 +1,14 @@
 
+.text-grid, .subst-symbol {
+  font-family: monospace;
+}
 .text-grid {
   position: relative;
   overflow: scroll;
-  font-family: monospace;
 }
 .text-row, .text-col {
   position: absolute;
-  cursor: move;
+  cursor: pointer;
 }
 .text-row-selected, .text-col-selected {
   background: #f00000;
@@ -34,4 +36,23 @@
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome and Opera */
+}
+
+.subst-label, .subst-cell {
+  vertical-align: top;
+}
+.subst-label {
+  display: inline-block;
+  width: 50px;
+}
+.subst-cell {
+  display: inline-block;
+  width: 14px;
+}
+.subst-symbol {
+  white-space: pre;
+}
+
+.draggable {
+  cursor: move;
 }

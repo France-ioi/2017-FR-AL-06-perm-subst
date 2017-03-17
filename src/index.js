@@ -1,3 +1,4 @@
+/* subst; test texte; selection; réponse */
 
 import runTask from 'alkindi-task-lib';
 import update from 'immutability-helper';
@@ -7,13 +8,18 @@ import {ButtonToolbar, ButtonGroup, Button} from 'react-bootstrap';
 import classnames from 'classnames';
 import range from 'node-range';
 import {select, takeLatest, takeEvery} from 'redux-saga/effects';
+import {DragDropContext} from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 
 import 'font-awesome/css/font-awesome.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'rc-tooltip/assets/bootstrap.css';
 import './style.css';
 
+import SubstEditor from './subst';
+
 export function run (container, options) {
+  options = {...options, wrapper: App => DragDropContext(HTML5Backend)(App)};
   runTask(container, options, TaskBundle);
 };
 
@@ -51,7 +57,10 @@ function TaskBundle (bundle, deps) {
   bundle.defineView('Task', IntroSelector, Intro);
 
   const WorkspaceActions = bundle.pack('submitAnswer', 'SaveButton',
-    'gridMounted', 'gridScrolled', 'colSelected', 'rowSelected', 'modeChanged', 'rowMoved', 'colMoved');
+    'gridMounted', 'gridScrolled', 'gridResized',
+    'colSelected', 'rowSelected', 'modeChanged', 'rowMoved', 'colMoved',
+    'substItemsSwapped', 'substItemLocked'
+  );
   bundle.defineView('Workspace', WorkspaceSelector, Workspace(WorkspaceActions));
 
   bundle.defineAction('modeChanged', 'Grid.Mode.Changed');
@@ -73,6 +82,13 @@ function TaskBundle (bundle, deps) {
     let {workspace} = state;
     workspace = {...workspace, hPos, vPos};
     return {...state, workspace};
+  });
+
+  bundle.defineAction('gridResized', 'Grid.Resized');
+  bundle.addReducer('gridResized', function (state, action) {
+    const {nCols} = action;
+    return update(state,
+      {dump: {$set: makeDump(state.task, nCols)}});
   });
 
   bundle.defineAction('rowSelected', 'Grid.Row.Selected');
@@ -105,7 +121,7 @@ function TaskBundle (bundle, deps) {
     }
     return update(state, {
       workspace: {selectedRow: {$set: newRow}},
-      dump: {rowPerm: makePermSwap(rowPerm, row, newRow)}
+      dump: {rowPerm: arraySwap(rowPerm, row, newRow)}
     });
   });
 
@@ -119,9 +135,26 @@ function TaskBundle (bundle, deps) {
     }
     state = update(state, {
       workspace: {selectedCol: {$set: newCol}},
-      dump: {colPerm: makePermSwap(colPerm, col, newCol)}
+      dump: {colPerm: arraySwap(colPerm, col, newCol)}
     });
     return state;
+  });
+
+  bundle.defineAction('substItemsSwapped', 'Subst.Items.Swapped');
+  bundle.addReducer('substItemsSwapped', function (state, action) {
+    const {substitution} = state.dump;
+    const {rank1, rank2} = action;
+    return update(state, {
+      dump: {substitution: arraySwap(substitution, rank1, rank2)}
+    });
+  });
+
+  bundle.defineAction('substItemLocked', 'Subst.Item.Locked');
+  bundle.addReducer('substItemLocked', function (state, action) {
+    const {rank} = action;
+    return update(state, {
+      dump: {substitution: {[rank]: {locked: {$apply: b => !b}}}}
+    });
   });
 
   bundle.addSaga(function* () {
@@ -139,6 +172,10 @@ function TaskBundle (bundle, deps) {
 }
 
 const alphabet = makeAlphabet('abcdefghijklmnopqrstuvwxyz0123456789 .-+|'.split(''));
+
+const identitySubstitution = alphabet.symbols.map(function (symbol) {
+  return {symbol, locked: false};
+});
 
 function taskLoaded (state) {
   const dump = makeDump(state.task, 40);
@@ -163,9 +200,7 @@ function makeDump (task, nCols) {
   const nRows = Math.floor((textLength + nCols - 1) / nCols);
   const rowPerm = range(0, nRows).toArray();
   const colPerm = range(0, nCols).toArray();
-  const substitution = alphabet.symbols.map(function (symbol) {
-    return {symbol, locked: false};
-  });
+  const substitution = identitySubstitution;
   return {nCols, nRows, rowPerm, colPerm, substitution};
 }
 
@@ -184,7 +219,6 @@ function initWorkspace (state, dump) {
 }
 
 function updateWorkspace (state, dump) {
-  const {substitution} = dump;
   const workspace = {...state.workspace, ready: true};
   return {...state, dump, workspace};
 }
@@ -215,12 +249,12 @@ const Workspace = actions => EpicComponent(function (self) {
   const selectionHalo = 2; /* number of rows,cols visible around selection */
 
   self.render = function () {
+    const {substitution} = self.props.dump;
     const {mode, selectedRow, selectedCol} = self.props.workspace;
     const isCols = mode === 'cols';
     const isRows = mode === 'rows';
     return (
       <div>
-        <p>Workspace</p>
         <ButtonToolbar>
           <ButtonGroup>
             <Button style={{width: '40px'}} active={isCols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
@@ -230,7 +264,14 @@ const Workspace = actions => EpicComponent(function (self) {
             {isCols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLeft}><i className="fa fa-arrow-left"/></Button>}
             {isCols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-arrow-right"/></Button>}
           </ButtonGroup>
+          <div className="input-group" style={{width: '64px'}}>
+            <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
+          </div>
         </ButtonToolbar>
+        <div>
+          <SubstEditor alphabet={alphabet} substitution={substitution}
+            onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
+        </div>
         <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
           {mode === 'rows' && renderRows()}
           {mode === 'cols' && renderCols()}
@@ -280,6 +321,12 @@ const Workspace = actions => EpicComponent(function (self) {
     const hPos = Math.floor(left / cellWidth);
     self.props.dispatch({type: actions.gridScrolled, vPos, hPos});
   }
+  function onColsChanged (event) {
+    const nCols = parseInt(event.target.value);
+    if (nCols >= 0) {
+      self.props.dispatch({type: actions.gridResized, nCols});
+    }
+  }
   function onSelectRow (event) {
     const row = parseInt(event.currentTarget.getAttribute('data-row'));
     self.props.dispatch({type: actions.rowSelected, row});
@@ -303,6 +350,12 @@ const Workspace = actions => EpicComponent(function (self) {
   function onMoveColRight (event) {
     const col = self.props.workspace.selectedCol;
     self.props.dispatch({type: actions.colMoved, col, direction: 1});
+  }
+  function onToggleSubstLock (rank) {
+    self.props.dispatch({type: actions.substItemLocked, rank});
+  }
+  function onSwapPairs (rank1, rank2) {
+    self.props.dispatch({type: actions.substItemsSwapped, rank1, rank2});
   }
 
   /* grid and framing */
@@ -470,7 +523,8 @@ const Workspace = actions => EpicComponent(function (self) {
   function renderCellContent (col) {
     const {cell} = col;
     if ('rank' in cell) {
-      return <span>{alphabet.symbols[cell.rank]}</span>;
+      const clearCell = self.props.dump.substitution[cell.rank];
+      return <span>{clearCell.symbol}</span>;
     } else {
       return <span>{cell.symbol}</span>;
     }
@@ -506,9 +560,9 @@ function textToCells (alphabet, textStr) {
   return cells;
 }
 
-function makePermSwap (perm, i, j) {
+function arraySwap (array, i, j) {
   return {
-    [i]: {$set: perm[j]},
-    [j]: {$set: perm[i]}
+    [i]: {$set: array[j]},
+    [j]: {$set: array[i]}
   };
 }
