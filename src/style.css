@@ -1,0 +1,37 @@
+
+.text-grid {
+  position: relative;
+  overflow: scroll;
+  font-family: monospace;
+}
+.text-row, .text-col {
+  position: absolute;
+  cursor: move;
+}
+.text-row-selected, .text-col-selected {
+  background: #f00000;
+}
+.text-row-bg, .text-col-bg {
+  background: #f8f8f8;
+  position: absolute;
+}
+.text-cell {
+  position: absolute;
+  text-align: center;
+}
+.grid-sizer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+}
+
+.no-select {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
