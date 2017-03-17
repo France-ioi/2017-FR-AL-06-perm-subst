@@ -1,4 +1,4 @@
-/* subst; test texte; selection; réponse */
+/* test texte; selection; réponse */
 
 import runTask from 'alkindi-task-lib';
 import update from 'immutability-helper';
@@ -196,7 +196,7 @@ function isWorkspaceReady (state) {
 }
 
 function makeDump (task, nCols) {
-  const textLength = task.clear_text.length;
+  const textLength = task.cipher_text.length;
   const nRows = Math.floor((textLength + nCols - 1) / nCols);
   const rowPerm = range(0, nRows).toArray();
   const colPerm = range(0, nCols).toArray();
@@ -213,7 +213,7 @@ function dumpWorkspace (state) {
 }
 
 function initWorkspace (state, dump) {
-  const cells = textToCells(alphabet, state.task.clear_text);
+  const cells = textToCells(alphabet, state.task.cipher_text);
   const workspace = {cells, hPos: 0, vPos: 0, mode: 'cols'};
   return updateWorkspace({...state, workspace}, dump);
 }
