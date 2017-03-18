@@ -6,23 +6,28 @@
   position: relative;
   overflow: scroll;
 }
-.text-row, .text-col {
+.text-row, .text-col, .text-row-bg, .text-col-bg, .text-cell, .grid-sizer {
   position: absolute;
+}
+.text-row, .text-col {
   cursor: pointer;
 }
 .text-row-selected, .text-col-selected {
   background: #f00000;
 }
 .text-row-bg, .text-col-bg {
+  background: #f0f0f0;
+}
+.text-cell-literal {
   background: #f8f8f8;
-  position: absolute;
+}
+.text-cell-locked {
+  background: #e0e0e0;
 }
 .text-cell {
-  position: absolute;
   text-align: center;
 }
 .grid-sizer {
-  position: absolute;
   width: 1px;
   height: 1px;
   background: transparent;

@@ -1,4 +1,4 @@
-/* test texte; selection; réponse */
+/* substitution; gris locké; css; selection; réponse; participation code d'équipe */
 
 import runTask from 'alkindi-task-lib';
 import update from 'immutability-helper';
@@ -87,8 +87,10 @@ function TaskBundle (bundle, deps) {
   bundle.defineAction('gridResized', 'Grid.Resized');
   bundle.addReducer('gridResized', function (state, action) {
     const {nCols} = action;
-    return update(state,
-      {dump: {$set: makeDump(state.task, nCols)}});
+    const dump = makeDump(state.task, nCols);
+    /* Preserve the substitution. */
+    dump.substitution = state.dump.substitution;
+    return update(state, {dump: {$set: dump}});
   });
 
   bundle.defineAction('rowSelected', 'Grid.Row.Selected');
@@ -121,7 +123,10 @@ function TaskBundle (bundle, deps) {
     }
     return update(state, {
       workspace: {selectedRow: {$set: newRow}},
-      dump: {rowPerm: arraySwap(rowPerm, row, newRow)}
+      dump: {
+        rowPerm: arraySwap(rowPerm, row, newRow),
+        permChanged: {$set: true}
+      }
     });
   });
 
@@ -135,7 +140,10 @@ function TaskBundle (bundle, deps) {
     }
     state = update(state, {
       workspace: {selectedCol: {$set: newCol}},
-      dump: {colPerm: arraySwap(colPerm, col, newCol)}
+      dump: {
+        colPerm: arraySwap(colPerm, col, newCol),
+        permChanged: {$set: true}
+      }
     });
     return state;
   });
@@ -336,6 +344,11 @@ const Workspace = actions => EpicComponent(function (self) {
   function onColsChanged (event) {
     const nCols = parseInt(event.target.value);
     if (nCols >= 0) {
+      if (self.props.dump.permChanged) {
+        if (!confirm("La permutation des lignes et colonnes de la grille va être perdue. Continuer ?")) {
+          return;
+        }
+      }
       self.props.dispatch({type: actions.gridResized, nCols});
     }
   }
@@ -411,11 +424,7 @@ const Workspace = actions => EpicComponent(function (self) {
         {rows.map(row =>
           <div key={row.key} className={classnames(["text-row", row.selected && "text-row-selected"])} style={renderRowStyle(row)} data-row={row.y} onClick={onSelectRow}>
             <div className="text-row-bg" style={renderRowBgStyle(row)}></div>
-            {row.cols.map(col =>
-              <div key={col.key} className="text-cell" style={renderRowColCellStyle(row, col)}>
-                {renderCellContent(col)}
-              </div>
-            )}
+            {row.cols.map(col => renderCell(col, renderRowColCellStyle(row, col)))}
           </div>)}
       </div>
     );
@@ -423,8 +432,9 @@ const Workspace = actions => EpicComponent(function (self) {
   function renderRowColCellStyle (row, col) {
     return {
       left: `${(col.x - row.x1) * cellWidth}px`,
-      width: `${cellWidth}px`,
-      height: `${cellHeight}px`
+      width: `${cellWidth - innerPadding * 2}px`,
+      height: `${cellHeight - innerPadding * 2}px`,
+      margin: `${innerPadding}px`
     };
   }
   function renderRowStyle (row) {
@@ -457,8 +467,8 @@ const Workspace = actions => EpicComponent(function (self) {
       range(firstCol, lastCol, true).forEach(function (x) {
         const col = colPerm[x];
         const index = row * nCols + col;
-        const cell = index < cells.length ? cells[index] : paddingCell;
-        cols.push({key: col, cell, x, y});
+        const content = index < cells.length ? cells[index] : paddingCell;
+        cols.push({key: col, content, x, y});
       });
       rows.push({
         key: row, cols, x1: firstCol, x2: lastCol, y,
@@ -477,11 +487,7 @@ const Workspace = actions => EpicComponent(function (self) {
         {cols.map(col =>
           <div key={col.key} className={classnames(["text-col", col.selected && "text-col-selected"])} style={renderColStyle(col)} data-col={col.x} onClick={onSelectCol}>
             <div className="text-col-bg" style={renderColBgStyle(col)}></div>
-            {col.rows.map(row =>
-              <div key={row.key} className="text-cell" style={renderColRowCellStyle(col, row)}>
-                {renderCellContent(row)}
-              </div>
-            )}
+            {col.rows.map(row => renderCell(row, renderColRowCellStyle(col, row)))}
           </div>)}
       </div>
     );
@@ -489,8 +495,9 @@ const Workspace = actions => EpicComponent(function (self) {
   function renderColRowCellStyle (col, row) {
     return {
       top: `${(row.y - col.y1) * cellHeight}px`,
-      width: `${cellWidth}px`,
-      height: `${cellHeight}px`
+      width: `${cellWidth - innerPadding * 2}px`,
+      height: `${cellHeight - innerPadding * 2}px`,
+      margin: `${innerPadding}px`
     };
   }
   function renderColStyle (col) {
@@ -523,8 +530,8 @@ const Workspace = actions => EpicComponent(function (self) {
       range(firstRow, lastRow, true).forEach(function (y) {
         const row = rowPerm[y];
         const index = row * nCols + col;
-        const cell = index < cells.length ? cells[index] : paddingCell;
-        rows.push({key: row, cell, x, y});
+        const content = index < cells.length ? cells[index] : paddingCell;
+        rows.push({key: row, content, x, y});
       });
       cols.push({
         key: col, rows, x, y1: firstRow, y2: lastRow,
@@ -536,14 +543,20 @@ const Workspace = actions => EpicComponent(function (self) {
 
   /* cells */
   const paddingCell = {symbol: ' ', locked: false, padding: true};
-  function renderCellContent (col) {
-    const {cell} = col;
-    if ('rank' in cell) {
-      const clearCell = self.props.dump.substitution[cell.rank];
-      return <span>{clearCell.symbol}</span>;
+  function renderCell (cell, style) {
+    const {content} = cell;
+    let body, classes;
+    if ('rank' in content) {
+      const clearCell = self.props.dump.substitution[content.rank];
+      body = <span>{clearCell.symbol}</span>;
+      classes = classnames(["text-cell", clearCell.locked && "text-cell-locked"]);
     } else {
-      return <span>{cell.symbol}</span>;
+      body = <span>{content.symbol}</span>;
+      classes = "text-cell text-cell-literal";
     }
+    return (
+      <div key={cell.key} className={classes} style={style}>{body}</div>
+    );
   }
 
 });
