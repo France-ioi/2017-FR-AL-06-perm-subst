@@ -18,6 +18,7 @@ import './style.css';
 
 import SubstEditor from './subst';
 import Intro from './intro';
+import AnswerBundle from './answer';
 
 const isDevel = process.env.NODE_ENV !== 'production';
 
@@ -64,7 +65,7 @@ function TaskBundle (bundle, deps) {
     'gridMounted', 'gridScrolled', 'gridResized',
     'colSelected', 'rowSelected', 'modeChanged', 'rowMoved', 'colMoved',
     'substItemsSwapped', 'substItemLocked', 'cipherTextChanged',
-    'solveSubst', 'solvePerm'
+    'solveSubst', 'solvePerm', 'Answer'
   );
   bundle.defineView('Workspace', WorkspaceSelector, Workspace(WorkspaceActions));
 
@@ -217,6 +218,9 @@ function TaskBundle (bundle, deps) {
     });
   });
 
+  bundle.include(AnswerBundle);
+  bundle.use('Answer');
+
   /* DEVELOPMENT ACTIONS */
 
   bundle.defineAction('showSolve', 'Task.Solve.Show');
@@ -300,7 +304,7 @@ function IntroSelector (state) {
   return {baseUrl: taskBaseUrl};
 }
 
-const Workspace = actions => EpicComponent(function (self) {
+const Workspace = deps => EpicComponent(function (self) {
 
   const maxVisibleRows = 12;
   const maxVisibleCols = 43;
@@ -323,6 +327,14 @@ const Workspace = actions => EpicComponent(function (self) {
     const isMode = {[mode]: true};
     return (
       <div>
+        <div className="panel panel-default">
+          <div className="panel-heading">
+            {"Questions (100 points chacune)"}
+          </div>
+          <div className="panel-body">
+            <deps.Answer/>
+          </div>
+        </div>
         <div className="panel panel-default">
           <div className="panel-heading">
             {"Substitution"}
@@ -401,23 +413,23 @@ const Workspace = actions => EpicComponent(function (self) {
         }
       }
     };
-    self.props.dispatch({type: actions.gridMounted, grid});
+    self.props.dispatch({type: deps.gridMounted, grid});
   }
   function onSwitchToText () {
-    self.props.dispatch({type: actions.modeChanged, mode: 'text'});
+    self.props.dispatch({type: deps.modeChanged, mode: 'text'});
   }
   function onSwitchToCols () {
-    self.props.dispatch({type: actions.modeChanged, mode: 'cols'});
+    self.props.dispatch({type: deps.modeChanged, mode: 'cols'});
   }
   function onSwitchToRows () {
-    self.props.dispatch({type: actions.modeChanged, mode: 'rows'});
+    self.props.dispatch({type: deps.modeChanged, mode: 'rows'});
   }
   function onScroll (event) {
     const top = event.target.scrollTop;
     const left = event.target.scrollLeft;
     const vPos = Math.floor(top / cellHeight);
     const hPos = Math.floor(left / cellWidth);
-    self.props.dispatch({type: actions.gridScrolled, vPos, hPos});
+    self.props.dispatch({type: deps.gridScrolled, vPos, hPos});
   }
   function onColsChanged (event) {
     const nCols = parseInt(event.target.value);
@@ -427,64 +439,64 @@ const Workspace = actions => EpicComponent(function (self) {
           return;
         }
       }
-      self.props.dispatch({type: actions.gridResized, nCols});
+      self.props.dispatch({type: deps.gridResized, nCols});
     }
   }
   function onSelectRow (event) {
     const row = parseInt(event.currentTarget.getAttribute('data-row'));
-    self.props.dispatch({type: actions.rowSelected, row});
+    self.props.dispatch({type: deps.rowSelected, row});
   }
   function onSelectCol (event) {
     const col = parseInt(event.currentTarget.getAttribute('data-col'));
-    self.props.dispatch({type: actions.colSelected, col});
+    self.props.dispatch({type: deps.colSelected, col});
   }
   function onMoveRowUp (event) {
     const row = self.props.workspace.selectedRow;
-    self.props.dispatch({type: actions.rowMoved, row, direction: -1});
+    self.props.dispatch({type: deps.rowMoved, row, direction: -1});
   }
   function onMoveRowDown (event) {
     const row = self.props.workspace.selectedRow;
-    self.props.dispatch({type: actions.rowMoved, row, direction: 1});
+    self.props.dispatch({type: deps.rowMoved, row, direction: 1});
   }
   function onMoveRowFirst (event) {
     const row = self.props.workspace.selectedRow;
-    self.props.dispatch({type: actions.rowMoved, row, position: 'first'});
+    self.props.dispatch({type: deps.rowMoved, row, position: 'first'});
   }
   function onMoveRowLast (event) {
     const row = self.props.workspace.selectedRow;
-    self.props.dispatch({type: actions.rowMoved, row, position: 'last'});
+    self.props.dispatch({type: deps.rowMoved, row, position: 'last'});
   }
   function onMoveColLeft (event) {
     const col = self.props.workspace.selectedCol;
-    self.props.dispatch({type: actions.colMoved, col, direction: -1});
+    self.props.dispatch({type: deps.colMoved, col, direction: -1});
   }
   function onMoveColRight (event) {
     const col = self.props.workspace.selectedCol;
-    self.props.dispatch({type: actions.colMoved, col, direction: 1});
+    self.props.dispatch({type: deps.colMoved, col, direction: 1});
   }
   function onMoveColFirst (event) {
     const col = self.props.workspace.selectedCol;
-    self.props.dispatch({type: actions.colMoved, col, position: 'first'});
+    self.props.dispatch({type: deps.colMoved, col, position: 'first'});
   }
   function onMoveColLast (event) {
     const col = self.props.workspace.selectedCol;
-    self.props.dispatch({type: actions.colMoved, col, position: 'last'});
+    self.props.dispatch({type: deps.colMoved, col, position: 'last'});
   }
   function onToggleSubstLock (rank) {
-    self.props.dispatch({type: actions.substItemLocked, rank});
+    self.props.dispatch({type: deps.substItemLocked, rank});
   }
   function onSwapPairs (rank1, rank2) {
-    self.props.dispatch({type: actions.substItemsSwapped, rank1, rank2});
+    self.props.dispatch({type: deps.substItemsSwapped, rank1, rank2});
   }
   function onCipherTextChanged (event) {
     const text = event.target.value;
-    self.props.dispatch({type: actions.cipherTextChanged, text});
+    self.props.dispatch({type: deps.cipherTextChanged, text});
   }
   function onSolveSubst () {
-    self.props.dispatch({type: actions.solveSubst});
+    self.props.dispatch({type: deps.solveSubst});
   }
   function onSolvePerm () {
-    self.props.dispatch({type: actions.solvePerm});
+    self.props.dispatch({type: deps.solvePerm});
   }
 
   /* grid and framing */
