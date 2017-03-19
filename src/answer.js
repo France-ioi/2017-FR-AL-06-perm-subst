@@ -60,7 +60,7 @@ const Answer = actions => EpicComponent(self => {
         <FieldGroup
           id="answerCountries"
           type="text"
-          label="Donnez le nom d’au moins deux des 4 pays, en les séparant par des espaces."
+          label="Donnez le nom de deux des 4 pays, en les séparant par une espace."
           placeholder="2 noms de pays" />
         <FieldGroup
           id="answerPassword1"
@@ -75,7 +75,7 @@ const Answer = actions => EpicComponent(self => {
         <FieldGroup
           id="answerCountries"
           type="text"
-          label="Quels sont les X animaux qui se cachent parmi les mots de passe chiffrés ? Mettez les dans l’ordre de votre choix et séparez les par des espaces."
+          label="Nommez deux noms d'animaux qui se cachent parmi les mots de passe chiffrés."
           placeholder="2 noms d'animaux" />
         <Button onClick={onSubmitAnswer} disabled={submitAnswer && submitAnswer.status === 'pending'}>
           {"soumettre"}
