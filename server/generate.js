@@ -200,8 +200,15 @@ function generate (params, seed, callback) {
    rows = applyPermutationToColumns(rows, colsPermutation);
    var shuffledText = concatRows(rows);
 
-   var task = {cipher_text: shuffledText};
-   var full_task = Object.assign({}, task, rowsPermutation, colsPermutation, gridString, substitution, strUsers, {});
+   var task = {
+      cipher_text: shuffledText
+   };
+   var full_task = Object.assign({
+      clearText: stringAll,
+      substitution,
+      rowsPermutation,
+      colsPermutation
+   }, task);
    callback(null, {task, full_task});
 }
 
