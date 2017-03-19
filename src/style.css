@@ -1,8 +1,14 @@
+.panel-heading {
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 16px;
+  font-weight: bold;
+}
 
 .text-grid, .subst-symbol, textarea {
   font-family: monospace;
 }
 .text-grid {
+  margin-top: 1em;
   position: relative;
   overflow: scroll;
 }

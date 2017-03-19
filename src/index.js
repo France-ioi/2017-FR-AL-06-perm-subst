@@ -279,37 +279,44 @@ const Workspace = actions => EpicComponent(function (self) {
     const isMode = {[mode]: true};
     return (
       <div>
-        <h1>Substitution</h1>
-        <div>
-          <SubstEditor alphabet={alphabet} substitution={substitution} cols={Math.ceil(alphabet.size / 2)}
-            onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
-        </div>
-        <h1>Permutation</h1>
-        <ButtonToolbar>
-          <ButtonGroup>
-            <Button style={{width: '40px'}} active={isMode.text} onClick={onSwitchToText}><i className="fa fa-font"/></Button>
-            <Button style={{width: '40px'}} active={isMode.cols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
-            <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
-            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowTop}><i className="fa fa-angle-double-up"/></Button>}
-            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowUp}><i className="fa fa-angle-up"/></Button>}
-            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowDown}><i className="fa fa-angle-down"/></Button>}
-            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowBottom}><i className="fa fa-angle-double-down"/></Button>}
-            {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLeft}><i className="fa fa-angle-left"/></Button>}
-            {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-angle-right"/></Button>}
-          </ButtonGroup>
-          <div className="input-group" style={{width: '64px'}}>
-            <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
+        <div className="panel panel-default">
+          <div className="panel-heading">Substitution</div>
+          <div className="panel-body">
+            <SubstEditor alphabet={alphabet} substitution={substitution} cols={Math.ceil(alphabet.size / 2)}
+              onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
           </div>
-        </ButtonToolbar>
-        <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
-          {isMode.rows && renderRows()}
-          {isMode.cols && renderCols()}
-          {isMode.text && renderText()}
-          {renderGridSizer()}
         </div>
-        <hr/>
-        <div>
-          <textarea rows='10' cols='60' value={self.props.task.cipher_text} onChange={onCipherTextChanged}/>
+        <div className="panel panel-default">
+          <div className="panel-heading">Permutation</div>
+          <div className="panel-body">
+            <ButtonToolbar>
+              <ButtonGroup>
+                <Button style={{width: '40px'}} active={isMode.text} onClick={onSwitchToText}><i className="fa fa-font"/></Button>
+                <Button style={{width: '40px'}} active={isMode.cols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
+                <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
+                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowTop}><i className="fa fa-angle-double-up"/></Button>}
+                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowUp}><i className="fa fa-angle-up"/></Button>}
+                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowDown}><i className="fa fa-angle-down"/></Button>}
+                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowBottom}><i className="fa fa-angle-double-down"/></Button>}
+                {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLeft}><i className="fa fa-angle-left"/></Button>}
+                {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-angle-right"/></Button>}
+              </ButtonGroup>
+              <div className="input-group" style={{width: '64px'}}>
+                <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
+              </div>
+            </ButtonToolbar>
+            <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
+              {isMode.rows && renderRows()}
+              {isMode.cols && renderCols()}
+              {isMode.text && renderText()}
+              {renderGridSizer()}
+            </div>
+          </div>
+        </div>
+        <div className="panel panel-default">
+          <div className="panel-body">
+            <textarea rows='10' cols='60' value={self.props.task.cipher_text} onChange={onCipherTextChanged}/>
+          </div>
         </div>
       </div>
     );
