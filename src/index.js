@@ -279,6 +279,12 @@ const Workspace = actions => EpicComponent(function (self) {
     const isMode = {[mode]: true};
     return (
       <div>
+        <h1>Substitution</h1>
+        <div>
+          <SubstEditor alphabet={alphabet} substitution={substitution} cols={Math.ceil(alphabet.size / 2)}
+            onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
+        </div>
+        <h1>Permutation</h1>
         <ButtonToolbar>
           <ButtonGroup>
             <Button style={{width: '40px'}} active={isMode.text} onClick={onSwitchToText}><i className="fa fa-font"/></Button>
@@ -295,10 +301,6 @@ const Workspace = actions => EpicComponent(function (self) {
             <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
           </div>
         </ButtonToolbar>
-        <div>
-          <SubstEditor alphabet={alphabet} substitution={substitution} cols={Math.ceil(alphabet.size / 2)}
-            onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
-        </div>
         <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
           {isMode.rows && renderRows()}
           {isMode.cols && renderCols()}
