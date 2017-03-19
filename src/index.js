@@ -687,6 +687,7 @@ const Workspace = deps => EpicComponent(function (self) {
         {rows.map(row =>
           <div key={row.key} className="text-row" style={renderRowStyle(row)} data-row={row.y} onClick={onSelectRow}>
             {row.cols.map(col => renderCell(col, renderRowColCellStyle(row, col)))}
+            <br/>
           </div>)}
       </div>
     );
