@@ -20,7 +20,6 @@
   margin-top: 1em;
   position: relative;
   overflow: scroll;
-  background-color: #f7f7f7;
 }
 .text-row, .text-col, .text-row-bg, .text-col-bg, .text-cell, .grid-sizer {
   position: absolute;
@@ -32,13 +31,17 @@
   background: #f00000;
 }
 .text-row-bg, .text-col-bg {
-  background: #fff;
+  background: #f7f7f7;
+  border: 1px solid #ccc;
+}
+.text-row-selected .text-row-bg {
+  border-color: transparent;
 }
 .text-cell-literal {
-  background: #e7e7e7;
+  background: #ccc;
 }
 .text-cell-locked {
-  background: #ccc;
+  background: #aaa;
 }
 
 .text-cell {
