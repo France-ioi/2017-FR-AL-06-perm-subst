@@ -126,12 +126,12 @@ function TaskBundle (bundle, deps) {
       }
       perm = arraySwap(rowPerm, row, newRow);
     } else if (typeof position === 'string') {
-      if (position === 'start') {
+      if (position === 'first') {
         newRow = 0;
-        perm = arrayRotate(rowPerm, row, 0);
-      } else if (position === 'end') {
+        perm = arrayRotate(rowPerm, row, newRow);
+      } else if (position === 'last') {
         newRow = nRows - 1;
-        perm = arrayRotate(rowPerm, row, nRows - 1);
+        perm = arrayRotate(rowPerm, row, newRow);
       } else {
         return state;
       }
@@ -148,19 +148,32 @@ function TaskBundle (bundle, deps) {
   bundle.defineAction('colMoved', 'Grid.Col.Moved');
   bundle.addReducer('colMoved', function (state, action) {
     const {nCols, colPerm} = state.dump;
-    const {col, direction} = action;
-    const newCol = col + direction;
-    if (newCol < 0 || newCol >= nCols) {
-      return state;
+    const {col, direction, position} = action;
+    let perm, newCol;
+    if (typeof direction === 'number') {
+      newCol = col + direction;
+      if (newCol < 0 || newCol >= nCols) {
+        return state;
+      }
+      perm = arraySwap(colPerm, col, newCol);
+    } else if (typeof position === 'string') {
+      if (position === 'first') {
+        newCol = 0;
+        perm = arrayRotate(colPerm, col, newCol);
+      } else if (position === 'last') {
+        newCol = nCols - 1;
+        perm = arrayRotate(colPerm, col, newCol);
+      } else {
+        return state;
+      }
     }
-    state = update(state, {
+    return update(state, {
       workspace: {selectedCol: {$set: newCol}},
       dump: {
-        colPerm: arraySwap(colPerm, col, newCol),
+        colPerm: perm,
         permChanged: {$set: true}
       }
     });
-    return state;
   });
 
   bundle.defineAction('substItemsSwapped', 'Subst.Items.Swapped');
@@ -294,12 +307,14 @@ const Workspace = actions => EpicComponent(function (self) {
                 <Button style={{width: '40px'}} active={isMode.text} onClick={onSwitchToText}><i className="fa fa-font"/></Button>
                 <Button style={{width: '40px'}} active={isMode.cols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
                 <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
-                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowTop}><i className="fa fa-angle-double-up"/></Button>}
+                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowFirst}><i className="fa fa-angle-double-up"/></Button>}
                 {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowUp}><i className="fa fa-angle-up"/></Button>}
                 {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowDown}><i className="fa fa-angle-down"/></Button>}
-                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowBottom}><i className="fa fa-angle-double-down"/></Button>}
+                {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowLast}><i className="fa fa-angle-double-down"/></Button>}
+                {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColFirst}><i className="fa fa-angle-double-left"/></Button>}
                 {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLeft}><i className="fa fa-angle-left"/></Button>}
                 {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-angle-right"/></Button>}
+                {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLast}><i className="fa fa-angle-double-right"/></Button>}
               </ButtonGroup>
               <div className="input-group" style={{width: '64px'}}>
                 <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
@@ -392,13 +407,13 @@ const Workspace = actions => EpicComponent(function (self) {
     const row = self.props.workspace.selectedRow;
     self.props.dispatch({type: actions.rowMoved, row, direction: 1});
   }
-  function onMoveRowTop (event) {
+  function onMoveRowFirst (event) {
     const row = self.props.workspace.selectedRow;
-    self.props.dispatch({type: actions.rowMoved, row, position: 'start'});
+    self.props.dispatch({type: actions.rowMoved, row, position: 'first'});
   }
-  function onMoveRowBottom (event) {
+  function onMoveRowLast (event) {
     const row = self.props.workspace.selectedRow;
-    self.props.dispatch({type: actions.rowMoved, row, position: 'end'});
+    self.props.dispatch({type: actions.rowMoved, row, position: 'last'});
   }
   function onMoveColLeft (event) {
     const col = self.props.workspace.selectedCol;
@@ -407,6 +422,14 @@ const Workspace = actions => EpicComponent(function (self) {
   function onMoveColRight (event) {
     const col = self.props.workspace.selectedCol;
     self.props.dispatch({type: actions.colMoved, col, direction: 1});
+  }
+  function onMoveColFirst (event) {
+    const col = self.props.workspace.selectedCol;
+    self.props.dispatch({type: actions.colMoved, col, position: 'first'});
+  }
+  function onMoveColLast (event) {
+    const col = self.props.workspace.selectedCol;
+    self.props.dispatch({type: actions.colMoved, col, position: 'last'});
   }
   function onToggleSubstLock (rank) {
     self.props.dispatch({type: actions.substItemLocked, rank});
