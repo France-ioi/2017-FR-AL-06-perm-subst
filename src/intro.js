@@ -37,7 +37,7 @@ export default EpicComponent(self => {
         <p>Le premier outil vous permet de définir une substitution appliquée au texte pour le déchiffrer.</p>
         <p>Pour modifier la substitution, déplacez une lettre de sa deuxième rangée (lettre déchiffrée) en la glissant sous la lettre chiffrée de votre choix. Ainsi, si vous pensez que chaque lettre “a” du message chiffré est en fait un “e” dans le message d’origine, déplacez le “e” de la rangée du bas pour le placez sous le “a”.</p>
 
-        <img src="" alt=""/>
+        <img src={asset("images/substitutions.png")} alt="alt" />
 
         <p>Dans la pratique, comme les outils ne montrent plus la version chiffrée des symboles, vous pouvez ignorer la ligne du haut (chiffré), et utiliser l’outil comme ceci : si vous voyez un ‘f’ à un endroit où il devrait y avoir un ‘e’ dans le texte, déplacez la lettre ‘e’ de la partie du bas, vers le ‘f’ de la partie du bas.</p>
         <h4>Utilisation des cadenas</h4>
@@ -46,7 +46,7 @@ export default EpicComponent(self => {
         <p>Le deuxième outil vous permet de présenter le texte sous la forme d’une grille, dont vous choisissez le nombre de colonnes.</p>
         <p>Commencez par choisir le nombre de colonnes en modifiant le nombre dans la case dédiée, à droite des boutons.</p>
 
-        <img src="" alt=""/>
+        <img src={asset("images/tools.png")} alt="alt" />
 
         <p>Vous pouvez ensuite manipuler la grille selon trois modes, activables par les 3 premiers boutons :</p>
         <ul>
@@ -58,8 +58,6 @@ export default EpicComponent(self => {
         <h2>Réponse aux questions</h2>
         <p>Pour obtenir des points sur cet exercice, il faut répondre correctement à un maximum des questions qui vous sont posées. Vous pouvez tenter autant de soumissions que vous le souhaitez dans la limite de 2 réponses au cours d’une même minute. La soumission qui obtiendra le meilleur score déterminera votre score final pour le 3ème tour.</p>
         <p>À chaque soumission, on vous indiquera pour chaque question, si votre réponse est juste, et vous indiquera votre score total pour cette soumission.</p>
-
-        <img src={asset("images/image.png")} alt="alt" />
       </div>
     );
   };
