@@ -1,13 +1,13 @@
 
 import React from 'react';
 import EpicComponent from 'epic-component';
-import {Button, FormGroup, ControlLabel, FormControl, HelpBlock} from 'react-bootstrap';
+import {Alert, Button, FormGroup, ControlLabel, FormControl, HelpBlock} from 'react-bootstrap';
 import update from 'immutability-helper';
 //import classnames from 'classnames';
 
 export default function (bundle, deps) {
 
-  const actions = bundle.pack('submitAnswer', 'answerChanged');
+  const actions = bundle.pack('submitAnswer', 'answerChanged', 'dismissAnswerFeedback');
   bundle.defineView('Answer', AnswerSelector, Answer(actions));
 
   bundle.defineAction('answerChanged', 'Answer.Changed');
@@ -26,10 +26,16 @@ function AnswerSelector (state, props) {
 const Answer = actions => EpicComponent(self => {
 
   function FieldGroup({id, label, help, ...props}) {
+    const {submitAnswer} = self.props;
+    const valid =
+      submitAnswer.feedback ?
+        (self.props.submitAnswer.feedback[props.name] ? 'error' : 'success') :
+        null;
     return (
-      <FormGroup controlId={id}>
+      <FormGroup controlId={id} validationState={valid}>
         <ControlLabel>{label}</ControlLabel>
         <FormControl {...props} />
+        <FormControl.Feedback />
         {help && <HelpBlock>{help}</HelpBlock>}
       </FormGroup>
     );
@@ -51,8 +57,9 @@ const Answer = actions => EpicComponent(self => {
   };
 
   self.render = function () {
-    const {answer, submitAnswer, score} = self.props;
-    const {feedback} = submitAnswer;
+    const {answer, submitAnswer} = self.props;
+    const {feedback, score} = submitAnswer;
+    const scoreStyle = feedback && {exact: 'success', partial: 'warning', wrong: 'danger'}[feedback.result];
     return (
       <form className="submitBlock">
         <FieldGroup
@@ -65,7 +72,8 @@ const Answer = actions => EpicComponent(self => {
           id="answerSentence"
           name="sentence" value={answer.sentence} onChange={onAnswerChanged}
           type="text"
-          label="Donnez l’une des phrases du début du document d’origine (lettres majuscules et espaces uniquement)."
+          label="Donnez l’une des phrases du début du document d’origine."
+          help="Lettres majuscules et espaces uniquement."
           placeholder="phrase" />
         <FieldGroup
           id="answerGridTotal"
@@ -96,10 +104,13 @@ const Answer = actions => EpicComponent(self => {
           type="text"
           label="Nommez deux noms d'animaux qui se cachent parmi les mots de passe chiffrés."
           name="animals" value={answer.animals} onChange={onAnswerChanged}
+          help="Mettez les dans l’ordre de votre choix et séparez les par des espaces."
           placeholder="2 noms d'animaux" />
-        <Button onClick={onSubmitAnswer} disabled={submitAnswer && submitAnswer.status === 'pending'}>
-          {"soumettre"}
-        </Button>
+        {!feedback && <div className="text-center">
+          <Button onClick={onSubmitAnswer} disabled={submitAnswer && submitAnswer.status === 'pending'}>
+            {"soumettre"}
+          </Button>
+        </div>}
         {feedback &&
           <div className="feedbackBlock" onClick={onDismissAnswerFeedback}>
             {feedback.complete === true &&
@@ -113,9 +124,15 @@ const Answer = actions => EpicComponent(self => {
                 {" Votre réponse est incorrecte ou partiellement correcte."}
               </span>}
           </div>}
-        {feedback && <div className="scoreBlock">
-          {"Score : "}{score === undefined ? '-' : score}
-        </div>}
+        {feedback && <Alert bsStyle={scoreStyle} onDismiss={this.handleAlertDismiss}>
+          {feedback.result === 'exact' && <h4>Vos réponses sont exactes !</h4>}
+          {feedback.result === 'partial' && <h4>Vos réponses contiennent des erreurs.</h4>}
+          {feedback.result === 'wrong' && <h4>Vos réponses sont incorrectes.</h4>}
+          <p>Score obtenu : {score}</p>
+          <div className="text-center">
+            <Button onClick={onDismissAnswerFeedback}>Ok</Button>
+          </div>
+        </Alert>}
       </form>
     );
   }
