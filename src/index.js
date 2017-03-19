@@ -258,7 +258,7 @@ function dumpWorkspace (state) {
 
 function initWorkspace (state, dump) {
   const cells = textToCells(alphabet, state.task.cipher_text);
-  const workspace = {cells, hPos: 0, vPos: 0, mode: 'text'};
+  const workspace = {cells, hPos: 0, vPos: 0, mode: 'rows'};
   return updateWorkspace({...state, workspace}, dump);
 }
 
@@ -304,9 +304,9 @@ const Workspace = actions => EpicComponent(function (self) {
           <div className="panel-body">
             <ButtonToolbar>
               <ButtonGroup>
-                <Button style={{width: '40px'}} active={isMode.text} onClick={onSwitchToText}><i className="fa fa-font"/></Button>
-                <Button style={{width: '40px'}} active={isMode.cols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
                 <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
+                <Button style={{width: '40px'}} active={isMode.cols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
+                <Button style={{width: '40px'}} active={isMode.text} onClick={onSwitchToText}><i className="fa fa-font"/></Button>
                 {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowFirst}><i className="fa fa-angle-double-up"/></Button>}
                 {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowUp}><i className="fa fa-angle-up"/></Button>}
                 {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowDown}><i className="fa fa-angle-down"/></Button>}
