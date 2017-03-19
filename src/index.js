@@ -19,6 +19,8 @@ import './style.css';
 import SubstEditor from './subst';
 import Intro from './intro';
 
+const isDevel = process.env.NODE_ENV !== 'production';
+
 export function run (container, options) {
   options = {...options, wrapper: App => DragDropContext(HTML5Backend)(App)};
   runTask(container, options, TaskBundle);
@@ -60,7 +62,8 @@ function TaskBundle (bundle, deps) {
   const WorkspaceActions = bundle.pack('submitAnswer', 'SaveButton',
     'gridMounted', 'gridScrolled', 'gridResized',
     'colSelected', 'rowSelected', 'modeChanged', 'rowMoved', 'colMoved',
-    'substItemsSwapped', 'substItemLocked', 'cipherTextChanged'
+    'substItemsSwapped', 'substItemLocked', 'cipherTextChanged',
+    'solveSubst', 'solvePerm'
   );
   bundle.defineView('Workspace', WorkspaceSelector, Workspace(WorkspaceActions));
 
@@ -215,11 +218,17 @@ function TaskBundle (bundle, deps) {
 
   /* DEVELOPMENT ACTIONS */
 
-  bundle.defineAction('solve', 'Task.Solve');
-  bundle.addReducer('solve', function (state, action) {
+  bundle.defineAction('solveSubst', 'Task.Subst.Solve');
+  bundle.addReducer('solveSubst', function (state, action) {
+    const substitution = inverseSubstitution(state.full_task.substitution);
+    return update(state, {dump: {substitution: {$set: substitution}}});
+  });
+
+  bundle.defineAction('solvePerm', 'Task.Perm.Solve');
+  bundle.addReducer('solvePerm', function (state, action) {
     const nCols = state.full_task.colsPermutation.length;
     const nRows = state.full_task.rowsPermutation.length;
-    const substitution = inverseSubstitution(state.full_task.substitution);
+    const substitution = state.dump.substitution;
     const rowPerm = inversePermutation(state.full_task.rowsPermutation);
     const colPerm = inversePermutation(state.full_task.colsPermutation);
     const dump = {nCols, nRows, substitution, rowPerm, colPerm};
@@ -306,15 +315,23 @@ const Workspace = actions => EpicComponent(function (self) {
     return (
       <div>
         <div className="panel panel-default">
-          <div className="panel-heading">Substitution</div>
+          <div className="panel-heading">
+            {"Substitution"}
+          </div>
           <div className="panel-body">
+            {isDevel &&
+              <Button className="pull-right" onClick={onSolveSubst}><i className="fa fa-flash"/></Button>}
             <SubstEditor alphabet={alphabet} substitution={substitution} cols={Math.ceil(alphabet.size / 2)}
               onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
           </div>
         </div>
         <div className="panel panel-default">
-          <div className="panel-heading">Permutation</div>
+          <div className="panel-heading">
+            {"Permutation"}
+          </div>
           <div className="panel-body">
+            {isDevel &&
+              <Button className="pull-right" onClick={onSolvePerm}><i className="fa fa-flash"/></Button>}
             <ButtonToolbar>
               <ButtonGroup>
                 <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
@@ -332,6 +349,8 @@ const Workspace = actions => EpicComponent(function (self) {
               <div className="input-group" style={{width: '64px'}}>
                 <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
               </div>
+              {isDevel &&
+                <Button onClick={onSolvePerm}>{"résoudre"}</Button>}
             </ButtonToolbar>
             <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
               {isMode.rows && renderRows()}
@@ -453,6 +472,12 @@ const Workspace = actions => EpicComponent(function (self) {
   function onCipherTextChanged (event) {
     const text = event.target.value;
     self.props.dispatch({type: actions.cipherTextChanged, text});
+  }
+  function onSolveSubst () {
+    self.props.dispatch({type: actions.solveSubst});
+  }
+  function onSolvePerm () {
+    self.props.dispatch({type: actions.solvePerm});
   }
 
   /* grid and framing */
