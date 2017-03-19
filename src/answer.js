@@ -65,7 +65,7 @@ const Answer = actions => EpicComponent(self => {
         <FieldGroup
           id="answerPassword1"
           type="text"
-          label="Quel est le mot de passe de pierre xxxxxx ?"
+          label="Quel est le mot de passe de pierre ?"
           placeholder="mot de passe" />
         <FieldGroup
           id="answerPassword2"
