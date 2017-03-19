@@ -15,6 +15,7 @@ export default EpicComponent(self => {
 
    self.render = function() {
       const {alphabet, substitution, onLock} = self.props;
+      const cols = self.props.cols || substitution.length;
       function renderSubstCell (targetCell, sourceRank) {
          const sourceSymbol = alphabet.symbols[sourceRank];
          const targetSymbol = targetCell.symbol;
@@ -33,13 +34,24 @@ export default EpicComponent(self => {
             </div>
          );
       }
+      const groups = [];
+      let groupStart = 0;
+      while (groupStart < substitution.length) {
+         const group = substitution.slice(groupStart, groupStart + cols);
+         groups.push(
+            <div key={groupStart}>{group.map(function (targetCell, sourceRank) {
+               return renderSubstCell(targetCell, groupStart + sourceRank);
+            })}</div>
+         );
+         groupStart += cols;
+      }
       return (
          <div className='subst'>
             <div className='subst-label'>
                <div className='subst-source'>{"chiffré"}</div>
                <div className='subst-target'>{"clair"}</div>
             </div>
-            {substitution.map(renderSubstCell)}
+            {groups}
          </div>
       );
    };

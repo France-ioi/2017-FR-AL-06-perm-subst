@@ -301,7 +301,7 @@ const Workspace = actions => EpicComponent(function (self) {
           </div>
         </ButtonToolbar>
         <div>
-          <SubstEditor alphabet={alphabet} substitution={substitution}
+          <SubstEditor alphabet={alphabet} substitution={substitution} cols={Math.ceil(alphabet.size / 2)}
             onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
         </div>
         <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
