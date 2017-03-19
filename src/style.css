@@ -26,6 +26,9 @@
   position: relative;
   overflow: scroll;
 }
+.text-normal {
+  white-space: pre;
+}
 .text-row, .text-col, .text-row-bg, .text-col-bg, .text-cell, .grid-sizer {
   position: absolute;
 }
