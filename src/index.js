@@ -53,7 +53,8 @@ function TaskBundle (bundle, deps) {
     return {
       ...state,
       workspaceOperations,
-      submitAnswer: {}
+      submitAnswer: {},
+      showSolve: false
     };
   });
 
@@ -218,6 +219,11 @@ function TaskBundle (bundle, deps) {
 
   /* DEVELOPMENT ACTIONS */
 
+  bundle.defineAction('showSolve', 'Task.Solve.Show');
+  bundle.addReducer('showSolve', function (state, action) {
+    return {...state, showSolve: true};
+  });
+
   bundle.defineAction('solveSubst', 'Task.Subst.Solve');
   bundle.addReducer('solveSubst', function (state, action) {
     const substitution = inverseSubstitution(state.full_task.substitution);
@@ -309,6 +315,7 @@ const Workspace = actions => EpicComponent(function (self) {
   const selectionHalo = 2; /* number of rows,cols visible around selection */
 
   self.render = function () {
+    const {showSolve} = self.props;
     const {substitution} = self.props.dump;
     const {mode, selectedRow, selectedCol} = self.props.workspace;
     const isMode = {[mode]: true};
@@ -319,7 +326,7 @@ const Workspace = actions => EpicComponent(function (self) {
             {"Substitution"}
           </div>
           <div className="panel-body">
-            {isDevel &&
+            {showSolve &&
               <Button className="pull-right" onClick={onSolveSubst}><i className="fa fa-flash"/></Button>}
             <SubstEditor alphabet={alphabet} substitution={substitution} cols={Math.ceil(alphabet.size / 2)}
               onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
@@ -330,7 +337,7 @@ const Workspace = actions => EpicComponent(function (self) {
             {"Permutation"}
           </div>
           <div className="panel-body">
-            {isDevel &&
+            {showSolve &&
               <Button className="pull-right" onClick={onSolvePerm}><i className="fa fa-flash"/></Button>}
             <ButtonToolbar>
               <div className="input-group" style={{width: '64px'}}>
@@ -674,8 +681,8 @@ const Workspace = actions => EpicComponent(function (self) {
 });
 
 function WorkspaceSelector (state, props) {
-  const {score, task, dump, workspace, submitAnswer} = state;
-  return {score, task, dump, workspace, submitAnswer};
+  const {score, task, dump, workspace, submitAnswer, showSolve} = state;
+  return {score, task, dump, workspace, submitAnswer, showSolve};
 }
 
 function makeAlphabet (symbols) {
