@@ -26,10 +26,10 @@
   background: #fff;
 }
 .text-cell-literal {
-  background: #ccc;
+  background: #e7e7e7;
 }
 .text-cell-locked {
-  background: #e7e7e7;
+  background: #ccc;
 }
 .text-cell {
   text-align: center;
@@ -64,13 +64,17 @@
   color: #666;
   text-align: right;
   margin-right: 1em;
+  margin-top: 5px;
 }
 .subst-cell {
   font-family: "Lucida Console", Monaco, monospace;
   font-size: 18px;
   display: inline-block;
   text-align: center;
-  padding: 2px;
+  margin: 0 2px 2px;
+}
+.subst-cell-locked {
+  background-color: #ccc;
 }
 .subst-cell .subst-target {
   border: 1px solid #ccc;

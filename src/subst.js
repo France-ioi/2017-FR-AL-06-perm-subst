@@ -22,7 +22,7 @@ export default EpicComponent(self => {
          const isLocked = targetCell.locked;
          const isEditable = !isLocked;
          const Target = isEditable ? SubstTarget : BareSubstTarget;
-         const cellClasses = ['subst-cell'];
+         const cellClasses = ['subst-cell', isLocked ? 'subst-cell-locked ' : ''];
          return (
             <div key={sourceRank} className={classnames(cellClasses)}>
                <div className='subst-source'>
