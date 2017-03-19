@@ -1,6 +1,7 @@
 #container { width: 800px;}
 .taskInstructions {
     text-align: justify;
+    margin-bottom: 3em;
 }
 .taskInstructions img {
   display: block;

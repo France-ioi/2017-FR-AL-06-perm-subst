@@ -31,7 +31,7 @@ export default EpicComponent(self => {
           <li>On a retiré les retours à la ligne à la fin de chaque ligne, pour former une longue chaîne.</li>
           <li>On a appliqué une substitution : à chaque lettre minuscule, chiffre ou caractère spécial, on a associé un symbole distinct parmi lettres minuscules, chiffres et caractères spéciaux. On a ensuite remplacé toutes les occurrences des caractères, par leur symbole associé.</li>
         </ol>
-        <h2>Outils disponnibles</h2>
+        <h2>Outils disponibles</h2>
         <p>Vous disposez de deux outils pour vous aider à déchiffrer le texte :</p>
         <h3>1) Édition de la substitution</h3>
         <p>Le premier outil vous permet de définir une substitution appliquée au texte pour le déchiffrer.</p>
