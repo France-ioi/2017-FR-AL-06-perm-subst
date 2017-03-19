@@ -274,10 +274,10 @@ function IntroSelector (state) {
 
 const Workspace = actions => EpicComponent(function (self) {
 
-  const maxVisibleRows = 10;
+  const maxVisibleRows = 12;
   const maxVisibleCols = 60;
-  const extraRenderedRows = 4;
-  const extraRenderedCols = 4;
+  const extraRenderedRows = 2;
+  const extraRenderedCols = 2;
   const paddingLeft = 10;
   const paddingTop = 10;
   const cellWidth = 16;
