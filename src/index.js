@@ -333,6 +333,9 @@ const Workspace = actions => EpicComponent(function (self) {
             {isDevel &&
               <Button className="pull-right" onClick={onSolvePerm}><i className="fa fa-flash"/></Button>}
             <ButtonToolbar>
+              <div className="input-group" style={{width: '64px'}}>
+                <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
+              </div>
               <ButtonGroup>
                 <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
                 <Button style={{width: '40px'}} active={isMode.cols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
@@ -346,11 +349,6 @@ const Workspace = actions => EpicComponent(function (self) {
                 {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-angle-right"/></Button>}
                 {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLast}><i className="fa fa-angle-double-right"/></Button>}
               </ButtonGroup>
-              <div className="input-group" style={{width: '64px'}}>
-                <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
-              </div>
-              {isDevel &&
-                <Button onClick={onSolvePerm}>{"résoudre"}</Button>}
             </ButtonToolbar>
             <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
               {isMode.rows && renderRows()}
