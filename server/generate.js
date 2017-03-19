@@ -106,9 +106,9 @@ function genUsers(nbLetters, mask, nbCols, indications, answers, rng) {
    var iNoClear = intRand(rng, nbUsers - 10) + 5;
    for (var iUser = 0; iUser < nbUsers; iUser++) {
       var user = listUsers[iUser];
-      var password = strAnimals.charAt(iUser) + genPassword(8, rng);
-      var maskedPassword = applyMask(password, mask);
-      var strUser = user.name + maskedPassword;
+      var encryptedPassword = strAnimals.charAt(iUser) + genPassword(8, rng);
+      var password = applyMask(encryptedPassword, mask);
+      var strUser = user.name + encryptedPassword;
       if (user.isTarget) {
          indications.user1Name = user.name;
          answers.user1Password = password;
@@ -172,8 +172,8 @@ function generate (params, seed, callback) {
       answers.sentences.push(sentence);
       strSentences += sentence;
    }
-   var mask = genMask(9, rng);
    var strCountries = genCountries(nbCols, answers, rng);
+   var mask = genMask(9, rng);
    var strUsers = genUsers(25, mask, nbCols, indications, answers, rng);
 
    var gridString = generateGridString(answers, nbCols, rng);
