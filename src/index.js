@@ -313,6 +313,8 @@ const Workspace = actions => EpicComponent(function (self) {
   const innerPadding = 2;
   const scrollSpace = 20;
   const selectionHalo = 2; /* number of rows,cols visible around selection */
+  const cellWidthRowExtend = 4; /*used to increase cell width in row mode */
+  const cellHeightColExtend = 4; /*used to increase cell height in col mode */
 
   self.render = function () {
     const {showSolve} = self.props;
@@ -538,7 +540,7 @@ const Workspace = actions => EpicComponent(function (self) {
   function renderRowColCellStyle (row, col) {
     return {
       left: `${(col.x - row.x1) * cellWidth}px`,
-      width: `${cellWidth - innerPadding * 2}px`,
+      width: `${cellWidth - innerPadding * 2 + cellWidthRowExtend}px`,
       height: `${cellHeight - innerPadding * 2}px`,
       margin: `${innerPadding}px`
     };
@@ -548,7 +550,7 @@ const Workspace = actions => EpicComponent(function (self) {
     return {
       left: `${paddingLeft + x1 * cellWidth}px`,
       top: `${paddingTop + y * cellHeight}px`,
-      width: `${(x2 - x1 + 1) * cellWidth}px`,
+      width: `${(x2 - x1 + 1) * cellWidth + cellWidthRowExtend}px`,
       height: `${cellHeight}px`
     };
   }
@@ -557,7 +559,7 @@ const Workspace = actions => EpicComponent(function (self) {
     return {
       left: `${innerPadding}px`,
       top: `${innerPadding}px`,
-      width: `${(x2 - x1 + 1) * cellWidth - innerPadding * 2}px`,
+      width: `${(x2 - x1 + 1) * cellWidth - innerPadding * 2 + cellWidthRowExtend}px`,
       height: `${cellHeight - innerPadding * 2}px`
     };
   }
@@ -602,7 +604,7 @@ const Workspace = actions => EpicComponent(function (self) {
     return {
       top: `${(row.y - col.y1) * cellHeight}px`,
       width: `${cellWidth - innerPadding * 2}px`,
-      height: `${cellHeight - innerPadding * 2}px`,
+      height: `${cellHeight - innerPadding * 2 + cellHeightColExtend}px`,
       margin: `${innerPadding}px`
     };
   }
@@ -612,7 +614,7 @@ const Workspace = actions => EpicComponent(function (self) {
       left: `${paddingLeft + x * cellWidth}px`,
       top: `${paddingTop + y1 * cellHeight}px`,
       width: `${cellWidth}px`,
-      height: `${(y2 - y1 + 1) * cellHeight}px`
+      height: `${(y2 - y1 + 1) * cellHeight + cellHeightColExtend}px`
     };
   }
   function renderColBgStyle (row) {
@@ -621,7 +623,7 @@ const Workspace = actions => EpicComponent(function (self) {
       left: `${innerPadding}px`,
       top: `${innerPadding}px`,
       width: `${cellWidth - innerPadding * 2}px`,
-      height: `${(y2 - y1 + 1) * cellHeight - innerPadding * 2}px`
+      height: `${(y2 - y1 + 1) * cellHeight - innerPadding * 2 + cellHeightColExtend}px`
     };
   }
   function getCols (frame) {
