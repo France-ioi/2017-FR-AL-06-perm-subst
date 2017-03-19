@@ -17,6 +17,7 @@ import 'rc-tooltip/assets/bootstrap.css';
 import './style.css';
 
 import SubstEditor from './subst';
+import Intro from './intro';
 
 export function run (container, options) {
   options = {...options, wrapper: App => DragDropContext(HTML5Backend)(App)};
@@ -252,12 +253,6 @@ function updateWorkspace (state, dump) {
   const workspace = {...state.workspace, ready: true};
   return {...state, dump, workspace};
 }
-
-const Intro = EpicComponent(function (self) {
-  self.render = function () {
-    return <p>Task</p>;
-  };
-});
 
 function IntroSelector (state) {
   const {task, taskBaseUrl} = state;
