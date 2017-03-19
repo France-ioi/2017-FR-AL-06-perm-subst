@@ -207,7 +207,8 @@ function generate (params, seed, callback) {
       clearText: stringAll,
       substitution,
       rowsPermutation,
-      colsPermutation
+      colsPermutation,
+      answers
    }, task);
    callback(null, {task, full_task});
 }
