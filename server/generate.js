@@ -4,6 +4,7 @@ const seedrandom = require('seedrandom');
 const {
    intRand,
    shuffleArray, shuffleColumns, genSubstitution,
+   genPermutation, applyPermutationToArray, applyPermutationToColumns,
    extractRows, concatRows, applySubstitution,
    pad, cleanUpSpecialChars
 } = require('./utils');
@@ -134,7 +135,7 @@ function genCountries(nbCols, answers, rng) {
    for (var iCountry = 0; iCountry < names.length; iCountry++) {
       var strCountry = shuffledCountries[iCountry].toLowerCase();
       answers.countries.push(strCountry);
-      var strNumberRow = "pays " + names[iCountry] + " : ";
+      var strNumberRow = "NOM DU PAYS " + names[iCountry] + " : ";
       for (var iChar = 0; iChar < strCountry.length; iChar++) {
          var c = strCountry.charAt(iChar);
          if (c == ' ') {
@@ -186,16 +187,21 @@ function generate (params, seed, callback) {
 
    var symbols = "abcdefghijklmnopqrstuvwxyz1234567890|+-. ";
    var badSpaceSubst = {" ": true, "-": true, ".": true, "+": true, "|": true};
-   var subst = genSubstitution(symbols, rng);
-   while (badSpaceSubst[subst[" "]]) {
-      subst = genSubstitution(symbols, rng);
+   var substitution = genSubstitution(symbols, rng);
+   while (badSpaceSubst[substitution[" "]]) {
+      substitution = genSubstitution(symbols, rng);
    }
+   var stringSubst = applySubstitution(stringAll, substitution);
 
-   var stringSubst = applySubstitution(stringAll, subst);
-   var shuffledText = concatRows(shuffleColumns(shuffleArray(extractRows(stringSubst), rng), rng));
+   var rows = extractRows(stringSubst);
+   var rowsPermutation = genPermutation(rows.length, rng);
+   var colsPermutation = genPermutation(nbCols, rng);
+   rows = applyPermutationToArray(rows, rowsPermutation);
+   rows = applyPermutationToColumns(rows, colsPermutation);
+   var shuffledText = concatRows(rows);
 
    var task = {cipher_text: shuffledText};
-   var full_task = Object.assign({}, task, {});
+   var full_task = Object.assign({}, task, rowsPermutation, colsPermutation, gridString, substitution, strUsers, {});
    callback(null, {task, full_task});
 }
 

@@ -6,6 +6,9 @@ function intRand (rng, maxVal) {
 
 Object.assign(module.exports, {
   intRand,
+  genPermutation,
+  applyPermutationToArray,
+  applyPermutationToColumns,
   shuffleString,
   shuffleArray,
   extractRows,
@@ -16,6 +19,43 @@ Object.assign(module.exports, {
   genSubstitution,
   cleanUpSpecialChars
 });
+
+function genPermutation(nbElements, rng) {
+   var elements = [];
+   for (var iElem = 0; iElem < nbElements; iElem++) {
+      elements.push(iElem);
+   }
+   return shuffleArray(elements, rng);
+}
+
+function applyPermutationToArray(a, permutation) {
+   var newA = [];
+   for (var iElem = 0; iElem < a.length; iElem++) {
+      newA.push(a[permutation[iElem]]);
+   }
+   return newA;
+}
+
+function applyPermutationToColumns(a, permutation) {
+   var newA = [];
+   for (var iRow = 0; iRow < a.length; iRow++) {
+      newA.push([]);
+   }
+   for (var iElem = 0; iElem < permutation.length; iElem++) {
+      for (var iRow = 0; iRow < a.length; iRow++) {
+         newA[iRow].push(a[iRow][permutation[iElem]]);
+      }
+   }
+   return newA;
+}
+
+function applyPermutationToString(s, permutation) {
+   var newS = "";
+   for (var iElem = 0; iElem > s.length; iElem++) {
+      newA[iElem] = a.charAt(permutation[iElem]);
+   }
+   return newA;
+}
 
 function shuffleString (s, rng) {
    var a = []
