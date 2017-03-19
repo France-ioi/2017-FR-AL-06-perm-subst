@@ -55,7 +55,16 @@ function TaskBundle (bundle, deps) {
       ...state,
       workspaceOperations,
       submitAnswer: {},
-      showSolve: false
+      showSolve: false,
+      answer: {
+        "nbCols": 40,
+        "sentence": "",
+        "countries": "",
+        "animals": "",
+        "user2Password": "",
+        "user1Password": "",
+        "gridTotal": 0
+      }
     };
   });
 
