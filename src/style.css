@@ -36,17 +36,17 @@
   background: #f00000;
 }
 .text-row-bg, .text-col-bg {
-  background: #f7f7f7;
+  background: #f9f9f9;
   border: 1px solid #ccc;
 }
 .text-row-selected .text-row-bg {
   border-color: transparent;
 }
 .text-cell-literal {
-  background: #ccc;
+  background: #e7e7e7;
 }
 .text-cell-locked {
-  background: #aaa;
+  background: #ccc;
 }
 
 .text-cell {
