@@ -213,6 +213,19 @@ function TaskBundle (bundle, deps) {
     });
   });
 
+  /* DEVELOPMENT ACTIONS */
+
+  bundle.defineAction('solve', 'Task.Solve');
+  bundle.addReducer('solve', function (state, action) {
+    const nCols = state.full_task.colsPermutation.length;
+    const nRows = state.full_task.rowsPermutation.length;
+    const substitution = inverseSubstitution(state.full_task.substitution);
+    const rowPerm = inversePermutation(state.full_task.rowsPermutation);
+    const colPerm = inversePermutation(state.full_task.colsPermutation);
+    const dump = {nCols, nRows, substitution, rowPerm, colPerm};
+    return update(state, {dump: {$set: dump}});
+  });
+
 }
 
 const alphabet = makeAlphabet('abcdefghijklmnopqrstuvwxyz0123456789 .-+|'.split(''));
@@ -680,4 +693,22 @@ function arrayRotate (array, fromPos, toPos) {
   const temp = result.splice(fromPos, 1);
   result.splice(toPos, 0, temp[0]);
   return {$set: result};
+}
+
+function inversePermutation (perm) {
+  const result = new Array(perm.length);
+  perm.forEach(function (val, index) {
+    result[val] = index;
+  });
+  return result;
+}
+
+function inverseSubstitution (subst) {
+  const result = new Array(alphabet.size);
+  Object.keys(subst).forEach(function (clearSymbol) {
+    const cipherSymbol = subst[clearSymbol];
+    const cipherRank = alphabet.ranks[cipherSymbol];
+    result[cipherRank] = {symbol: clearSymbol, locked: true};
+  });
+  return result;
 }
