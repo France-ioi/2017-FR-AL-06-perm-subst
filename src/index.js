@@ -116,15 +116,29 @@ function TaskBundle (bundle, deps) {
   bundle.defineAction('rowMoved', 'Grid.Row.Moved');
   bundle.addReducer('rowMoved', function (state, action) {
     const {nRows, rowPerm} = state.dump;
-    const {row, direction} = action;
-    const newRow = row + direction;
-    if (newRow < 0 || newRow >= nRows) {
-      return state;
+    const {row, direction, position} = action;
+    let perm, newRow;
+    if (typeof direction === 'number') {
+      newRow = row + direction;
+      if (newRow < 0 || newRow >= nRows) {
+        return state;
+      }
+      perm = arraySwap(rowPerm, row, newRow);
+    } else if (typeof position === 'string') {
+      if (position === 'start') {
+        newRow = 0;
+        perm = arrayRotate(rowPerm, row, 0);
+      } else if (position === 'end') {
+        newRow = nRows - 1;
+        perm = arrayRotate(rowPerm, row, nRows - 1);
+      } else {
+        return state;
+      }
     }
     return update(state, {
       workspace: {selectedRow: {$set: newRow}},
       dump: {
-        rowPerm: arraySwap(rowPerm, row, newRow),
+        rowPerm: perm,
         permChanged: {$set: true}
       }
     });
@@ -230,7 +244,7 @@ function dumpWorkspace (state) {
 
 function initWorkspace (state, dump) {
   const cells = textToCells(alphabet, state.task.cipher_text);
-  const workspace = {cells, hPos: 0, vPos: 0, mode: 'cols'};
+  const workspace = {cells, hPos: 0, vPos: 0, mode: 'text'};
   return updateWorkspace({...state, workspace}, dump);
 }
 
@@ -267,18 +281,20 @@ const Workspace = actions => EpicComponent(function (self) {
   self.render = function () {
     const {substitution} = self.props.dump;
     const {mode, selectedRow, selectedCol} = self.props.workspace;
-    const isCols = mode === 'cols';
-    const isRows = mode === 'rows';
+    const isMode = {[mode]: true};
     return (
       <div>
         <ButtonToolbar>
           <ButtonGroup>
-            <Button style={{width: '40px'}} active={isCols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
-            <Button style={{width: '40px'}} active={isRows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
-            {isRows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowUp}><i className="fa fa-arrow-up"/></Button>}
-            {isRows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowDown}><i className="fa fa-arrow-down"/></Button>}
-            {isCols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLeft}><i className="fa fa-arrow-left"/></Button>}
-            {isCols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-arrow-right"/></Button>}
+            <Button style={{width: '40px'}} active={isMode.text} onClick={onSwitchToText}><i className="fa fa-font"/></Button>
+            <Button style={{width: '40px'}} active={isMode.cols} onClick={onSwitchToCols}><i className="fa fa-arrows-h"/></Button>
+            <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
+            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowTop}><i className="fa fa-angle-double-up"/></Button>}
+            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowUp}><i className="fa fa-angle-up"/></Button>}
+            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowDown}><i className="fa fa-angle-down"/></Button>}
+            {isMode.rows && <Button style={{width: '40px'}} disabled={selectedRow===undefined} onClick={onMoveRowBottom}><i className="fa fa-angle-double-down"/></Button>}
+            {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLeft}><i className="fa fa-angle-left"/></Button>}
+            {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColRight}><i className="fa fa-angle-right"/></Button>}
           </ButtonGroup>
           <div className="input-group" style={{width: '64px'}}>
             <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
@@ -289,8 +305,9 @@ const Workspace = actions => EpicComponent(function (self) {
             onLock={onToggleSubstLock} onSwapPairs={onSwapPairs} />
         </div>
         <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
-          {mode === 'rows' && renderRows()}
-          {mode === 'cols' && renderCols()}
+          {isMode.rows && renderRows()}
+          {isMode.cols && renderCols()}
+          {isMode.text && renderText()}
           {renderGridSizer()}
         </div>
         <hr/>
@@ -327,6 +344,9 @@ const Workspace = actions => EpicComponent(function (self) {
       }
     };
     self.props.dispatch({type: actions.gridMounted, grid});
+  }
+  function onSwitchToText () {
+    self.props.dispatch({type: actions.modeChanged, mode: 'text'});
   }
   function onSwitchToCols () {
     self.props.dispatch({type: actions.modeChanged, mode: 'cols'});
@@ -368,6 +388,14 @@ const Workspace = actions => EpicComponent(function (self) {
     const row = self.props.workspace.selectedRow;
     self.props.dispatch({type: actions.rowMoved, row, direction: 1});
   }
+  function onMoveRowTop (event) {
+    const row = self.props.workspace.selectedRow;
+    self.props.dispatch({type: actions.rowMoved, row, position: 'start'});
+  }
+  function onMoveRowBottom (event) {
+    const row = self.props.workspace.selectedRow;
+    self.props.dispatch({type: actions.rowMoved, row, position: 'end'});
+  }
   function onMoveColLeft (event) {
     const col = self.props.workspace.selectedCol;
     self.props.dispatch({type: actions.colMoved, col, direction: -1});
@@ -388,6 +416,14 @@ const Workspace = actions => EpicComponent(function (self) {
   }
 
   /* grid and framing */
+  function getFullFrame () {
+    const {nCols, nRows} = self.props.dump;
+    const firstRow = 0;
+    const lastRow = nRows - 1;
+    const firstCol = 0;
+    const lastCol = nCols - 1;
+    return {firstRow, lastRow, firstCol, lastCol};
+  }
   function getVisibleFrame (narrow) {
     const extraRows = narrow ? 0 : extraRenderedRows;
     const extraCols = narrow ? 0 : extraRenderedCols;
@@ -559,6 +595,19 @@ const Workspace = actions => EpicComponent(function (self) {
     );
   }
 
+  function renderText () {
+    const frame = getFullFrame();
+    const rows = getRows(frame);
+    return (
+      <div className="text-normal">
+        {rows.map(row =>
+          <div key={row.key} className="text-row" style={renderRowStyle(row)} data-row={row.y} onClick={onSelectRow}>
+            {row.cols.map(col => renderCell(col, renderRowColCellStyle(row, col)))}
+          </div>)}
+      </div>
+    );
+  }
+
 });
 
 function WorkspaceSelector (state, props) {
@@ -594,4 +643,14 @@ function arraySwap (array, i, j) {
     [i]: {$set: array[j]},
     [j]: {$set: array[i]}
   };
+}
+
+function arrayRotate (array, fromPos, toPos) {
+  if (fromPos === toPos) {
+    return {};
+  }
+  const result = array.slice();
+  const temp = result.splice(fromPos, 1);
+  result.splice(toPos, 0, temp[0]);
+  return {$set: result};
 }
