@@ -1,4 +1,4 @@
-#container { width: 800px;}
+#container { width: 860px;}
 .taskInstructions {
     text-align: justify;
     margin-bottom: 3em;
@@ -25,6 +25,7 @@
   margin-top: 1em;
   position: relative;
   overflow: scroll;
+  margin-left: -10px;
 }
 .text-normal {
   white-space: pre;
