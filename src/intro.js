@@ -25,7 +25,7 @@ export default EpicComponent(self => {
         <h2>Chiffrement utilisé :</h2>
         <p>Le texte décrit ci-dessus a été chiffré de la manière suivante :</p>
         <ol>
-          <li>On a choisi un nombre de colonnes au moins égal à la longueur de la plus longue ligne du texte d’origine. On a complété chaque ligne par des espaces pour qu’elle fasse exactement ce nombre de colonnes.</li>
+          <li>On a choisi un nombre de colonnes au moins égal à la longueur de la plus longue ligne du texte d’origine. Ce nombre est entre 30 et 50 caractères. On a complété chaque ligne par des espaces pour qu’elle fasse exactement ce nombre de colonnes.</li>
           <li>On a mélangé au hasard l’ordre des colonnes.</li>
           <li>On a mélangé au hasard l’ordre des lignes.</li>
           <li>On a retiré les retours à la ligne à la fin de chaque ligne, pour former une longue chaîne.</li>
