@@ -57,12 +57,27 @@
   vertical-align: top;
 }
 .subst-label {
+  font-family: Arial, sans-serif;
   display: inline-block;
   width: 50px;
+  line-height: 22px;
+  color: #666;
+  text-align: right;
+  margin-right: 1em;
 }
 .subst-cell {
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 18px;
   display: inline-block;
-  width: 14px;
+  text-align: center;
+  padding: 2px;
+}
+.subst-cell .subst-target {
+  border: 1px solid #ccc;
+  padding: 0 2px;
+}
+.subst-cell .subst-target:hover {
+  background-color: #ccc;
 }
 .subst-symbol {
   white-space: pre;
