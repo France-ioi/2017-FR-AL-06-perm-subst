@@ -40,11 +40,14 @@
 .text-cell-locked {
   background: #ccc;
 }
+
 .text-cell {
   text-align: center;
 }
 .text-cell span {
   display: inline-block;
+  line-height: 14px;
+  vertical-align: 2px;
 }
 .grid-sizer {
   width: 1px;
