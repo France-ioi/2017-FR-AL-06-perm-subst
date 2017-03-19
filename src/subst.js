@@ -39,18 +39,19 @@ export default EpicComponent(self => {
       while (groupStart < substitution.length) {
          const group = substitution.slice(groupStart, groupStart + cols);
          groups.push(
-            <div key={groupStart}>{group.map(function (targetCell, sourceRank) {
-               return renderSubstCell(targetCell, groupStart + sourceRank);
-            })}</div>
-         );
+            <div key={groupStart}>
+               <div className='subst-label'>
+                  <div className='subst-source'>{"chiffré"}</div>
+                  <div className='subst-target'>{"clair"}</div>
+               </div>
+               {group.map(function (targetCell, sourceRank) {
+                  return renderSubstCell(targetCell, groupStart + sourceRank);
+               })}
+            </div>);
          groupStart += cols;
       }
       return (
          <div className='subst'>
-            <div className='subst-label'>
-               <div className='subst-source'>{"chiffré"}</div>
-               <div className='subst-target'>{"clair"}</div>
-            </div>
             {groups}
          </div>
       );
