@@ -90,7 +90,7 @@ const Answer = actions => EpicComponent(self => {
         <FieldGroup
           id="answerPassword1"
           type="text"
-          label="Quel est le mot de passe de pierre ?"
+          label="Quel est le mot de passe (en clair) de pierre ?"
           name="user1Password" value={answer.user1Password} onChange={onAnswerChanged}
           placeholder="mot de passe" />
         <FieldGroup
@@ -102,7 +102,7 @@ const Answer = actions => EpicComponent(self => {
         <FieldGroup
           id="answerAnimals"
           type="text"
-          label="Nommez deux noms d'animaux qui se cachent parmi les mots de passe chiffrés."
+          label="Donnez deux des noms d'animaux qui se cachent parmi les mots de passe chiffrés."
           name="animals" value={answer.animals} onChange={onAnswerChanged}
           help="Mettez les dans l’ordre de votre choix et séparez les par des espaces."
           placeholder="2 noms d'animaux" />
