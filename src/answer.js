@@ -58,7 +58,7 @@ const Answer = actions => EpicComponent(self => {
 
   self.render = function () {
     const {answer, submitAnswer} = self.props;
-    const {feedback, score} = submitAnswer;
+    const {feedback, score, error} = submitAnswer;
     const scoreStyle = feedback && {exact: 'success', partial: 'warning', wrong: 'danger'}[feedback.result];
     return (
       <form className="submitBlock">
@@ -124,11 +124,17 @@ const Answer = actions => EpicComponent(self => {
                 {" Votre réponse est incorrecte ou partiellement correcte."}
               </span>}
           </div>}
-        {feedback && <Alert bsStyle={scoreStyle} onDismiss={this.handleAlertDismiss}>
+        {feedback && <Alert bsStyle={scoreStyle} onDismiss={onDismissAnswerFeedback}>
           {feedback.result === 'exact' && <h4>Vos réponses sont exactes !</h4>}
           {feedback.result === 'partial' && <h4>Vos réponses contiennent des erreurs.</h4>}
           {feedback.result === 'wrong' && <h4>Vos réponses sont incorrectes.</h4>}
           <p>Score obtenu : {score}</p>
+          <div className="text-center">
+            <Button onClick={onDismissAnswerFeedback}>Ok</Button>
+          </div>
+        </Alert>}
+        {error && <Alert bsStyle='danger' onDismiss={onDismissAnswerFeedback}>
+          {error === 'too soon' && <h4>{"Soumission rejetée : trop de soumissions en moins d'une minute."}</h4>}
           <div className="text-center">
             <Button onClick={onDismissAnswerFeedback}>Ok</Button>
           </div>
