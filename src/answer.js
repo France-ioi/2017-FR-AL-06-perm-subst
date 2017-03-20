@@ -65,7 +65,7 @@ const Answer = actions => EpicComponent(self => {
         <FieldGroup
           id="answerColumns"
           name="nbCols" value={answer.nbCols} onChange={onAnswerChanged}
-          type="number"
+          type="text"
           label="Quel est le nombre de colonnes choisi pour la grille de chiffrement ?"
           placeholder="nombre" />
         <FieldGroup
@@ -77,7 +77,7 @@ const Answer = actions => EpicComponent(self => {
           placeholder="phrase" />
         <FieldGroup
           id="answerGridTotal"
-          type="number"
+          type="text"
           name="gridTotal" value={answer.gridTotal} onChange={onAnswerChanged}
           label="Quel est le nombre de la case en bas à droite de la grille de nombres ?"
           placeholder="nombre" />

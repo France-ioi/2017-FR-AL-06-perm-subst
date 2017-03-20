@@ -57,13 +57,13 @@ function TaskBundle (bundle, deps) {
       submitAnswer: {},
       showSolve: false,
       answer: {
-        "nbCols": 40,
+        "nbCols": "",
         "sentence": "",
         "countries": "",
         "animals": "",
         "user2Password": "",
         "user1Password": "",
-        "gridTotal": 0
+        "gridTotal": ""
       }
     };
   });
