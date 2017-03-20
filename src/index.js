@@ -94,12 +94,17 @@ function TaskBundle (bundle, deps) {
   bundle.defineAction('gridScrolled', 'Grid.Scrolled');
   bundle.addReducer('gridScrolled', function (state, action) {
     const {hPos, vPos} = action;
-    return updateWorkspace(update(state, {
+    state = update(state, {
       workspace: {
         hPos: {$set: hPos},
         vPos: {$set: vPos}
       }
-    }));
+    });
+    if (state.workspace.mode === 'text') {
+      /* updateWorkspace is not needed in text mode */
+      return state;
+    }
+    return updateWorkspace(state);
   });
 
   bundle.defineAction('gridResized', 'Grid.Resized');
@@ -117,7 +122,7 @@ function TaskBundle (bundle, deps) {
     function toggleSelection (prev) {
       return row === prev ? undefined : row;
     }
-    // updateWorkspace is not needed
+    /* updateWorkspace is not needed */
     return update(state,
       {workspace: {selectedRow: {$apply: toggleSelection}}});
   });
@@ -128,7 +133,7 @@ function TaskBundle (bundle, deps) {
     function toggleSelection (prev) {
       return col === prev ? undefined : col;
     }
-    // updateWorkspace is not needed
+    /* updateWorkspace is not needed */
     return update(state,
       {workspace: {selectedCol: {$apply: toggleSelection}}});
   });
