@@ -102,7 +102,7 @@ const Answer = actions => EpicComponent(self => {
         <FieldGroup
           id="answerAnimals"
           type="text"
-          label="Donnez deux des noms d'animaux qui se cachent parmi les mots de passe chiffrés."
+          label="Donner deux des noms d'animaux de la liste cachée parmi les mots de passe chiffrés."
           name="animals" value={answer.animals} onChange={onAnswerChanged}
           help="Mettez les dans l’ordre de votre choix et séparez les par des espaces."
           placeholder="2 noms d'animaux" />
