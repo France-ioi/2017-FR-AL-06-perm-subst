@@ -81,8 +81,8 @@ function TaskBundle (bundle, deps) {
   bundle.defineAction('modeChanged', 'Grid.Mode.Changed');
   bundle.addReducer('modeChanged', function (state, action) {
     const {mode} = action;
-    return update(state,
-      {workspace: {mode: {$set: mode}}});
+    return updateWorkspace(update(state,
+      {workspace: {mode: {$set: mode}}}));
   });
 
   bundle.defineAction('gridMounted', 'Grid.Mounted');
@@ -94,9 +94,12 @@ function TaskBundle (bundle, deps) {
   bundle.defineAction('gridScrolled', 'Grid.Scrolled');
   bundle.addReducer('gridScrolled', function (state, action) {
     const {hPos, vPos} = action;
-    let {workspace} = state;
-    workspace = {...workspace, hPos, vPos};
-    return {...state, workspace};
+    return updateWorkspace(update(state, {
+      workspace: {
+        hPos: {$set: hPos},
+        vPos: {$set: vPos}
+      }
+    }));
   });
 
   bundle.defineAction('gridResized', 'Grid.Resized');
@@ -105,7 +108,7 @@ function TaskBundle (bundle, deps) {
     const dump = makeDump(state.task, nCols);
     /* Preserve the substitution. */
     dump.substitution = state.dump.substitution;
-    return update(state, {dump: {$set: dump}});
+    return updateWorkspace(update(state, {dump: {$set: dump}}));
   });
 
   bundle.defineAction('rowSelected', 'Grid.Row.Selected');
@@ -114,6 +117,7 @@ function TaskBundle (bundle, deps) {
     function toggleSelection (prev) {
       return row === prev ? undefined : row;
     }
+    // updateWorkspace is not needed
     return update(state,
       {workspace: {selectedRow: {$apply: toggleSelection}}});
   });
@@ -124,6 +128,7 @@ function TaskBundle (bundle, deps) {
     function toggleSelection (prev) {
       return col === prev ? undefined : col;
     }
+    // updateWorkspace is not needed
     return update(state,
       {workspace: {selectedCol: {$apply: toggleSelection}}});
   });
@@ -150,13 +155,13 @@ function TaskBundle (bundle, deps) {
         return state;
       }
     }
-    return update(state, {
+    return updateWorkspace(update(state, {
       workspace: {selectedRow: {$set: newRow}},
       dump: {
         rowPerm: perm,
         permChanged: {$set: true}
       }
-    });
+    }));
   });
 
   bundle.defineAction('colMoved', 'Grid.Col.Moved');
@@ -181,30 +186,30 @@ function TaskBundle (bundle, deps) {
         return state;
       }
     }
-    return update(state, {
+    return updateWorkspace(update(state, {
       workspace: {selectedCol: {$set: newCol}},
       dump: {
         colPerm: perm,
         permChanged: {$set: true}
       }
-    });
+    }));
   });
 
   bundle.defineAction('substItemsSwapped', 'Subst.Items.Swapped');
   bundle.addReducer('substItemsSwapped', function (state, action) {
     const {substitution} = state.dump;
     const {rank1, rank2} = action;
-    return update(state, {
+    return updateWorkspace(update(state, {
       dump: {substitution: arraySwap(substitution, rank1, rank2)}
-    });
+    }));
   });
 
   bundle.defineAction('substItemLocked', 'Subst.Item.Locked');
   bundle.addReducer('substItemLocked', function (state, action) {
     const {rank} = action;
-    return update(state, {
+    return updateWorkspace(update(state, {
       dump: {substitution: {[rank]: {locked: {$apply: b => !b}}}}
-    });
+    }));
   });
 
   bundle.defineAction('cipherTextChanged', 'Task.CipherText.Changed');
@@ -240,7 +245,7 @@ function TaskBundle (bundle, deps) {
   bundle.defineAction('solveSubst', 'Task.Subst.Solve');
   bundle.addReducer('solveSubst', function (state, action) {
     const substitution = inverseSubstitution(state.full_task.substitution);
-    return update(state, {dump: {substitution: {$set: substitution}}});
+    return updateWorkspace(update(state, {dump: {substitution: {$set: substitution}}}));
   });
 
   bundle.defineAction('solvePerm', 'Task.Perm.Solve');
@@ -251,12 +256,13 @@ function TaskBundle (bundle, deps) {
     const rowPerm = inversePermutation(state.full_task.rowsPermutation);
     const colPerm = inversePermutation(state.full_task.colsPermutation);
     const dump = {nCols, nRows, substitution, rowPerm, colPerm};
-    return update(state, {dump: {$set: dump}});
+    return updateWorkspace(update(state, {dump: {$set: dump}}));
   });
 
 }
 
 const alphabet = makeAlphabet('abcdefghijklmnopqrstuvwxyz0123456789 .-+|'.split(''));
+const paddingCell = {symbol: ' ', locked: false, padding: true};
 
 const identitySubstitution = alphabet.symbols.map(function (symbol) {
   return {symbol, locked: false};
@@ -277,7 +283,7 @@ function workspaceLoaded (state, dump) {
 }
 
 function isWorkspaceReady (state) {
-  return state.workspace.ready;
+  return state.workspace && state.workspace.ready;
 }
 
 function makeDump (task, nCols) {
@@ -299,13 +305,41 @@ function dumpWorkspace (state) {
 
 function initWorkspace (state, dump) {
   const cells = textToCells(alphabet, state.task.cipher_text);
-  const workspace = {cells, hPos: 0, vPos: 0, mode: 'rows'};
+  const workspace = {
+    cells,
+    mode: 'rows',
+    hPos: 0,
+    vPos: 0,
+    maxVisibleRows: 12,
+    maxVisibleCols: 50,
+    extraRenderedRows: 2,
+    extraRenderedCols: 2,
+    selectionHalo: 2 /* number of rows,cols visible around selection */
+  };
   return updateWorkspace({...state, workspace}, dump);
 }
 
 function updateWorkspace (state, dump) {
+  dump = dump || state.dump;
   const workspace = {...state.workspace, ready: true};
-  return {...state, dump, workspace};
+  state = {...state, dump, workspace};
+  const {mode} = state.workspace;
+  if (mode === 'rows') {
+    const frame = getVisibleFrame(state);
+    const narrowFrame = getVisibleFrame(state, true);
+    const rows = getRows(state, frame);
+    workspace.view = {frame, narrowFrame, rows};
+  } else if (mode === 'cols') {
+    const frame = getVisibleFrame(state);
+    const narrowFrame = getVisibleFrame(state, true);
+    const cols = getCols(state, frame);
+    workspace.view = {frame, narrowFrame, cols};
+  } else if (mode === 'text') {
+    const frame = getFullFrame(state);
+    const rows = getRows(state, frame);
+    workspace.view = {frame, rows};
+  }
+  return state;
 }
 
 function IntroSelector (state) {
@@ -313,19 +347,15 @@ function IntroSelector (state) {
   return {baseUrl: taskBaseUrl};
 }
 
+
 const Workspace = deps => EpicComponent(function (self) {
 
-  const maxVisibleRows = 12;
-  const maxVisibleCols = 50;
-  const extraRenderedRows = 2;
-  const extraRenderedCols = 2;
   const paddingLeft = 0;
   const paddingTop = 10;
   const cellWidth = 16;
   const cellHeight = 20;
   const innerPadding = 2;
   const scrollSpace = 20;
-  const selectionHalo = 2; /* number of rows,cols visible around selection */
 
   self.render = function () {
     const {showSolve} = self.props;
@@ -398,7 +428,8 @@ const Workspace = deps => EpicComponent(function (self) {
   function refGrid (element) {
     const grid = element && {
       ensureRowVisible: function (row) {
-        const frame = getVisibleFrame(true);
+        const frame = self.props.workspace.view.narrowFrame;
+        const {maxVisibleRows, selectionHalo} = self.props.workspace;
         if (row < frame.firstRow + selectionHalo) {
           const firstRow = Math.max(0, row - selectionHalo);
           element.scrollTop = firstRow * cellHeight;
@@ -409,7 +440,8 @@ const Workspace = deps => EpicComponent(function (self) {
         }
       },
       ensureColVisible: function (col) {
-        const frame = getVisibleFrame(true);
+        const frame = self.props.workspace.view.narrowFrame;
+        const {maxVisibleCols, selectionHalo} = self.props.workspace;
         if (col < frame.firstCol + selectionHalo) {
           const firstCol = Math.max(0, col - selectionHalo);
           element.scrollLeft = firstCol * cellWidth;
@@ -507,25 +539,6 @@ const Workspace = deps => EpicComponent(function (self) {
   }
 
   /* grid and framing */
-  function getFullFrame () {
-    const {nCols, nRows} = self.props.dump;
-    const firstRow = 0;
-    const lastRow = nRows - 1;
-    const firstCol = 0;
-    const lastCol = nCols - 1;
-    return {firstRow, lastRow, firstCol, lastCol};
-  }
-  function getVisibleFrame (narrow) {
-    const extraRows = narrow ? 0 : extraRenderedRows;
-    const extraCols = narrow ? 0 : extraRenderedCols;
-    const {cells, hPos, vPos, mode} = self.props.workspace;
-    const {nCols, nRows} = self.props.dump;
-    const firstRow = Math.max(0, vPos - extraRows);
-    const lastRow = Math.min(nRows - 1, vPos + maxVisibleRows + extraRows);
-    const firstCol = Math.max(0, hPos - extraCols)
-    const lastCol = Math.min(nCols - 1, hPos + maxVisibleCols + extraCols);
-    return {firstRow, lastRow, firstCol, lastCol};
-  }
   function renderGridSizer () {
     const {nCols, nRows} = self.props.dump;
     const top = paddingTop * 2 + nRows * cellHeight;
@@ -534,6 +547,7 @@ const Workspace = deps => EpicComponent(function (self) {
   }
   function renderGridStyle () {
     const {nCols, nRows} = self.props.dump;
+    const {maxVisibleCols, maxVisibleRows} = self.props.workspace;
     const cols = Math.min(maxVisibleCols, nCols);
     const rows = Math.min(maxVisibleRows, nRows);
     return {
@@ -544,12 +558,12 @@ const Workspace = deps => EpicComponent(function (self) {
 
   /* row mode */
   function renderRows () {
-    const frame = getVisibleFrame();
-    const rows = getRows(frame);
+    const {selectedRow} = self.props.workspace;
+    const {frame, rows} = self.props.workspace.view;
     return (
       <div className="text-rows no-select">
         {rows.map(row =>
-          <div key={row.key} className={classnames(["text-row", row.selected && "text-row-selected"])} style={renderRowStyle(row)} data-row={row.y} onClick={onSelectRow}>
+          <div key={row.key} className={classnames(["text-row", row.y === selectedRow && "text-row-selected"])} style={renderRowStyle(row)} data-row={row.y} onClick={onSelectRow}>
             <div className="text-row-bg" style={renderRowBgStyle(row)}></div>
             {row.cols.map(col => renderCell(col))}
           </div>)}
@@ -574,37 +588,15 @@ const Workspace = deps => EpicComponent(function (self) {
       height: `${cellHeight - innerPadding * 2}px`
     };
   }
-  function getRows (frame) {
-    const {cells, selectedRow} = self.props.workspace;
-    const {rowPerm, colPerm} = self.props.dump;
-    const {nCols, nRows} = self.props.dump;
-    const {firstRow, lastRow, firstCol, lastCol} = frame;
-    const rows = [];
-    range(firstRow, lastRow, true).forEach(function (y) {
-      const row = rowPerm[y];
-      const cols = [];
-      range(firstCol, lastCol, true).forEach(function (x) {
-        const col = colPerm[x];
-        const index = row * nCols + col;
-        const content = index < cells.length ? cells[index] : paddingCell;
-        cols.push({key: col, content, x, y});
-      });
-      rows.push({
-        key: row, cols, x1: firstCol, x2: lastCol, y,
-        selected: selectedRow === y
-      });
-    });
-    return rows;
-  }
 
   /* col mode */
   function renderCols () {
-    const frame = getVisibleFrame();
-    const cols = getCols(frame);
+    const {selectedCol} = self.props.workspace;
+    const {frame, cols} = self.props.workspace.view;
     return (
       <div className="text-cols no-select">
         {cols.map(col =>
-          <div key={col.key} className={classnames(["text-col", col.selected && "text-col-selected"])} style={renderColStyle(col)} data-col={col.x} onClick={onSelectCol}>
+          <div key={col.key} className={classnames(["text-col", col.x === selectedCol && "text-col-selected"])} style={renderColStyle(col)} data-col={col.x} onClick={onSelectCol}>
             <div className="text-col-bg" style={renderColBgStyle(col)}></div>
             {col.rows.map(row => renderCell(row))}
           </div>)}
@@ -629,31 +621,8 @@ const Workspace = deps => EpicComponent(function (self) {
       height: `${(y2 - y1 + 1) * cellHeight}px`
     };
   }
-  function getCols (frame) {
-    const {cells, selectedCol} = self.props.workspace;
-    const {rowPerm, colPerm} = self.props.dump;
-    const {nCols, nRows} = self.props.dump;
-    const {firstRow, lastRow, firstCol, lastCol} = frame;
-    const cols = [];
-    range(firstCol, lastCol, true).forEach(function (x) {
-      const col = colPerm[x];
-      const rows = [];
-      range(firstRow, lastRow, true).forEach(function (y) {
-        const row = rowPerm[y];
-        const index = row * nCols + col;
-        const content = index < cells.length ? cells[index] : paddingCell;
-        rows.push({key: row, content, x, y});
-      });
-      cols.push({
-        key: col, rows, x, y1: firstRow, y2: lastRow,
-        selected: selectedCol === x
-      });
-    });
-    return cols;
-  }
 
   /* cells */
-  const paddingCell = {symbol: ' ', locked: false, padding: true};
   function renderCell (cell) {
     const {content} = cell;
     let body, classes;
@@ -671,8 +640,7 @@ const Workspace = deps => EpicComponent(function (self) {
   }
 
   function renderText () {
-    const frame = getFullFrame();
-    const rows = getRows(frame);
+    const {frame, rows} = self.props.workspace.view;
     return (
       <div className="text-normal">
         {rows.map(row =>
@@ -689,6 +657,66 @@ const Workspace = deps => EpicComponent(function (self) {
 function WorkspaceSelector (state, props) {
   const {score, task, dump, workspace, submitAnswer, showSolve} = state;
   return {score, task, dump, workspace, submitAnswer, showSolve};
+}
+
+function getFullFrame (state) {
+  const {nCols, nRows} = state.dump;
+  const firstRow = 0;
+  const lastRow = nRows - 1;
+  const firstCol = 0;
+  const lastCol = nCols - 1;
+  return {firstRow, lastRow, firstCol, lastCol};
+}
+
+function getVisibleFrame (state, narrow) {
+  const {extraRenderedRows, extraRenderedCols, maxVisibleRows, maxVisibleCols} = state.workspace;
+  const extraRows = narrow ? 0 : extraRenderedRows;
+  const extraCols = narrow ? 0 : extraRenderedCols;
+  const {cells, hPos, vPos, mode} = state.workspace;
+  const {nCols, nRows} = state.dump;
+  const firstRow = Math.max(0, vPos - extraRows);
+  const lastRow = Math.min(nRows - 1, vPos + maxVisibleRows + extraRows);
+  const firstCol = Math.max(0, hPos - extraCols)
+  const lastCol = Math.min(nCols - 1, hPos + maxVisibleCols + extraCols);
+  return {firstRow, lastRow, firstCol, lastCol};
+}
+
+function getRows (state, frame) {
+  const {cells} = state.workspace;
+  const {nCols, nRows, rowPerm, colPerm} = state.dump;
+  const {firstRow, lastRow, firstCol, lastCol} = frame;
+  const rows = [];
+  range(firstRow, lastRow, true).forEach(function (y) {
+    const row = rowPerm[y];
+    const cols = [];
+    range(firstCol, lastCol, true).forEach(function (x) {
+      const col = colPerm[x];
+      const index = row * nCols + col;
+      const content = index < cells.length ? cells[index] : paddingCell;
+      cols.push({key: col, content, x, y});
+    });
+    rows.push({key: row, cols, x1: firstCol, x2: lastCol, y});
+  });
+  return rows;
+}
+
+function getCols (state, frame) {
+  const {cells, selectedCol} = state.workspace;
+  const {nCols, nRows, rowPerm, colPerm} = state.dump;
+  const {firstRow, lastRow, firstCol, lastCol} = frame;
+  const cols = [];
+  range(firstCol, lastCol, true).forEach(function (x) {
+    const col = colPerm[x];
+    const rows = [];
+    range(firstRow, lastRow, true).forEach(function (y) {
+      const row = rowPerm[y];
+      const index = row * nCols + col;
+      const content = index < cells.length ? cells[index] : paddingCell;
+      rows.push({key: row, content, x, y});
+    });
+    cols.push({key: col, rows, x, y1: firstRow, y2: lastRow});
+  });
+  return cols;
 }
 
 function makeAlphabet (symbols) {
