@@ -21,17 +21,8 @@
 .text-grid, .subst-symbol, textarea {
   font-family: monospace;
 }
-.text-grid {
-  margin-top: 1em;
-  position: relative;
-  overflow: scroll;
-  margin-left: -10px;
-}
 .text-normal {
   white-space: pre;
-}
-.text-row, .text-col, .text-row-bg, .text-col-bg, .text-cell, .grid-sizer {
-  position: absolute;
 }
 .text-row, .text-col {
   cursor: pointer;
@@ -53,13 +44,35 @@
   background: #ccc;
 }
 
+.text-grid {
+  margin-top: 1em;
+  position: relative;
+  overflow: scroll;
+  margin-left: -10px;
+}
+.text-row, .text-col, .text-row-bg, .text-col-bg, .grid-sizer {
+  position: absolute;
+}
 .text-cell {
+  display: inline-block;
+  z-index: 1;
+  position: relative;
   text-align: center;
 }
 .text-cell span {
   display: inline-block;
   line-height: 14px;
   vertical-align: 2px;
+}
+.text-row .text-cell {
+  margin: 2px 0;
+  width: 16px;
+  height: 16px;
+}
+.text-col .text-cell {
+  margin: 0 2px;
+  width: 12px;
+  height: 16px;
 }
 .grid-sizer {
   width: 1px;

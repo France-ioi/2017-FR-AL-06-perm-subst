@@ -326,8 +326,6 @@ const Workspace = deps => EpicComponent(function (self) {
   const innerPadding = 2;
   const scrollSpace = 20;
   const selectionHalo = 2; /* number of rows,cols visible around selection */
-  const cellWidthRowExtend = 4; /*used to increase cell width in row mode */
-  const cellHeightColExtend = 4; /*used to increase cell height in col mode */
 
   self.render = function () {
     const {showSolve} = self.props;
@@ -553,34 +551,26 @@ const Workspace = deps => EpicComponent(function (self) {
         {rows.map(row =>
           <div key={row.key} className={classnames(["text-row", row.selected && "text-row-selected"])} style={renderRowStyle(row)} data-row={row.y} onClick={onSelectRow}>
             <div className="text-row-bg" style={renderRowBgStyle(row)}></div>
-            {row.cols.map(col => renderCell(col, renderRowColCellStyle(row, col)))}
+            {row.cols.map(col => renderCell(col))}
           </div>)}
       </div>
     );
   }
-  function renderRowColCellStyle (row, col) {
-    return {
-      left: `${(col.x - row.x1) * cellWidth}px`,
-      width: `${cellWidth - innerPadding * 2 + cellWidthRowExtend}px`,
-      height: `${cellHeight - innerPadding * 2}px`,
-      margin: `${innerPadding}px`
-    };
-  }
   function renderRowStyle (row) {
     const {x1, x2, y} = row;
     return {
-      left: `${paddingLeft + x1 * cellWidth}px`,
+      left: `${paddingLeft + x1 * cellWidth + 1}px`,
       top: `${paddingTop + y * cellHeight}px`,
-      width: `${(x2 - x1 + 1) * cellWidth + cellWidthRowExtend}px`,
+      width: `${(x2 - x1 + 1) * cellWidth}px`,
       height: `${cellHeight}px`
     };
   }
   function renderRowBgStyle (row) {
     const {x1, x2, y} = row;
     return {
-      left: `${innerPadding}px`,
+      left: `0px`,
       top: `${innerPadding}px`,
-      width: `${(x2 - x1 + 1) * cellWidth - innerPadding * 2 + cellWidthRowExtend}px`,
+      width: `${(x2 - x1 + 1) * cellWidth}px`,
       height: `${cellHeight - innerPadding * 2}px`
     };
   }
@@ -616,35 +606,27 @@ const Workspace = deps => EpicComponent(function (self) {
         {cols.map(col =>
           <div key={col.key} className={classnames(["text-col", col.selected && "text-col-selected"])} style={renderColStyle(col)} data-col={col.x} onClick={onSelectCol}>
             <div className="text-col-bg" style={renderColBgStyle(col)}></div>
-            {col.rows.map(row => renderCell(row, renderColRowCellStyle(col, row)))}
+            {col.rows.map(row => renderCell(row))}
           </div>)}
       </div>
     );
   }
-  function renderColRowCellStyle (col, row) {
-    return {
-      top: `${(row.y - col.y1) * cellHeight}px`,
-      width: `${cellWidth - innerPadding * 2}px`,
-      height: `${cellHeight - innerPadding * 2 + cellHeightColExtend}px`,
-      margin: `${innerPadding}px`
-    };
-  }
   function renderColStyle (col) {
     const {y1, y2, x} = col;
     return {
-      left: `${paddingLeft + x * cellWidth + 2}px`,
-      top: `${paddingTop + y1 * cellHeight}px`,
+      left: `${paddingLeft + x * cellWidth + 1}px`,
+      top: `${paddingTop + y1 * cellHeight + 2}px`,
       width: `${cellWidth}px`,
-      height: `${(y2 - y1 + 1) * cellHeight + cellHeightColExtend}px`
+      height: `${(y2 - y1 + 1) * cellHeight}px`
     };
   }
   function renderColBgStyle (row) {
     const {y1, y2, x} = row;
     return {
       left: `${innerPadding}px`,
-      top: `${innerPadding}px`,
+      top: `0px`,
       width: `${cellWidth - innerPadding * 2}px`,
-      height: `${(y2 - y1 + 1) * cellHeight - innerPadding * 2 + cellHeightColExtend}px`
+      height: `${(y2 - y1 + 1) * cellHeight}px`
     };
   }
   function getCols (frame) {
@@ -672,7 +654,7 @@ const Workspace = deps => EpicComponent(function (self) {
 
   /* cells */
   const paddingCell = {symbol: ' ', locked: false, padding: true};
-  function renderCell (cell, style) {
+  function renderCell (cell) {
     const {content} = cell;
     let body, classes;
     if ('rank' in content) {
@@ -684,7 +666,7 @@ const Workspace = deps => EpicComponent(function (self) {
       classes = "text-cell text-cell-literal";
     }
     return (
-      <div key={cell.key} className={classes} style={style}>{body}</div>
+      <div key={cell.key} className={classes}>{body}</div>
     );
   }
 
@@ -695,7 +677,7 @@ const Workspace = deps => EpicComponent(function (self) {
       <div className="text-normal">
         {rows.map(row =>
           <div key={row.key} className="text-row" style={renderRowStyle(row)} data-row={row.y} onClick={onSelectRow}>
-            {row.cols.map(col => renderCell(col, renderRowColCellStyle(row, col)))}
+            {row.cols.map(col => renderCell(col))}
             <br/>
           </div>)}
       </div>
