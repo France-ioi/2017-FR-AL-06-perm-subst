@@ -45,17 +45,16 @@ const checkers = {
   animals: function (expected, submitted) {
     submitted = words(submitted);
     expected = expected.animals.map(x => cleanUpSpecialChars(x.trim(), true));
-    console.log('check', expected, submitted);
-    if (submitted.length < 2) {
-      return "au moins 2 noms d'animaux sont attendus";
+    if (submitted.length !== 2) {
+      return "2 noms d'animaux sont attendus";
     }
-    let found = 0;
+    const found = {};
     submitted.forEach(function (sub) {
       if (expected.indexOf(sub) !== -1) {
-        found += 1;
+        found[sub] = true;
       }
     });
-    if (found < 2) {
+    if (Object.keys(found).length !== 2) {
       return "réponse incorrecte";
     }
     return false;
@@ -63,16 +62,16 @@ const checkers = {
   countries: function (expected, submitted) {
     submitted = words(submitted);
     expected = expected.countries.map(x => cleanUpSpecialChars(x.trim(), true));
-    if (submitted.length < 2) {
-      return "au moins 2 noms de pays sont attendus";
+    if (submitted.length !== 2) {
+      return "2 noms de pays sont attendus";
     }
-    let found = 0;
+    const found = {};
     submitted.forEach(function (sub) {
       if (expected.indexOf(sub) !== -1) {
-        found += 1;
+        found[sub] = true;
       }
     });
-    if (found < 2) {
+    if (Object.keys(found).length !== 2) {
       return "réponse incorrecte";
     }
     return false;
