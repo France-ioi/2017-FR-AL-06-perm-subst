@@ -632,7 +632,7 @@ const Workspace = deps => EpicComponent(function (self) {
   function renderColStyle (col) {
     const {y1, y2, x} = col;
     return {
-      left: `${paddingLeft + x * cellWidth}px`,
+      left: `${paddingLeft + x * cellWidth + 2}px`,
       top: `${paddingTop + y1 * cellHeight}px`,
       width: `${cellWidth}px`,
       height: `${(y2 - y1 + 1) * cellHeight + cellHeightColExtend}px`
