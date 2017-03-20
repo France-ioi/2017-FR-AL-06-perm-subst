@@ -75,9 +75,11 @@ const BareSubstTarget = EpicComponent(self => {
       const classes = ['subst-target', isDragSource && 'draggable', isDragging && 'dragging'];
       let el = (
          <div className={classnames(classes)}>
-            <div className='subst-char' onClick={onLock}>
+            <div className='subst-char'>
                <div className='subst-symbol'>{targetSymbol}</div>
-               <div className='subst-lock'><i className={classnames(['fa', locked ? 'fa-lock' : 'fa-unlock-alt'])}></i></div>
+               <div className='subst-lock' onClick={onLock}>
+                  <i className={classnames(['fa', locked ? 'fa-lock' : 'fa-unlock-alt'])}></i>
+               </div>
             </div>
          </div>
       );
