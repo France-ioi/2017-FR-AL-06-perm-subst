@@ -2,7 +2,7 @@
 import React from 'react';
 import EpicComponent from 'epic-component';
 import classnames from 'classnames';
-import {ButtonToolbar, ButtonGroup, Button} from 'react-bootstrap';
+import {Alert, ButtonToolbar, ButtonGroup, Button} from 'react-bootstrap';
 
 import SubstEditor from './subst';
 
@@ -17,8 +17,9 @@ export const Workspace = deps => EpicComponent(function (self) {
 
   self.render = function () {
     const {showSolve, alphabet, dump, workspace} = self.props;
-    const {substitution} = dump;
-    const {mode, selectedRow, selectedCol} = workspace;
+    const {substitution, nCols, permChanged} = dump;
+    const {mode, selectedRow, selectedCol, nColsTemp} = workspace;
+    const nColsConfirm = nColsTemp !== nCols;
     const isMode = {[mode]: true};
     return (
       <div className="taskWrapper">
@@ -53,7 +54,7 @@ export const Workspace = deps => EpicComponent(function (self) {
               <Button className="pull-right" onClick={onSolvePerm}><i className="fa fa-flash"/></Button>}
             <ButtonToolbar>
               <div className="input-group" style={{width: '64px'}}>
-                <input className="input-medium form-control" type="number" value={self.props.dump.nCols} onChange={onColsChanged} maxLength='2' />
+                <input className="input-medium form-control" type="number" value={nColsTemp} onChange={onColsChanged} maxLength='2' />
               </div>
               <ButtonGroup>
                 <Button style={{width: '40px'}} active={isMode.rows} onClick={onSwitchToRows}><i className="fa fa-arrows-v"/></Button>
@@ -69,6 +70,12 @@ export const Workspace = deps => EpicComponent(function (self) {
                 {isMode.cols && <Button style={{width: '40px'}} disabled={selectedCol===undefined} onClick={onMoveColLast}><i className="fa fa-angle-double-right"/></Button>}
               </ButtonGroup>
             </ButtonToolbar>
+            {nColsConfirm && <div>
+              <Alert bsStyle="danger">
+                <p>{"La permutation des lignes et colonnes de la grille va être perdue. Appliquer le changement ?"}</p>
+                <Button onClick={onResizeGrid}>Ok</Button>
+              </Alert>
+            </div>}
             <div className="text-grid" style={renderGridStyle()} onScroll={onScroll} ref={refGrid}>
               {isMode.rows && renderRows()}
               {isMode.cols && renderCols()}
@@ -139,13 +146,17 @@ export const Workspace = deps => EpicComponent(function (self) {
   function onColsChanged (event) {
     const nCols = parseInt(event.target.value);
     if (nCols >= 0) {
+      console.log('onColsChanged', self.props.dump.permChanged);
       if (self.props.dump.permChanged) {
-        if (!confirm("La permutation des lignes et colonnes de la grille va être perdue. Continuer ?")) {
-          return;
-        }
+        self.props.dispatch({type: deps.resizeGrid, nCols});
+      } else {
+        self.props.dispatch({type: deps.gridResized, nCols});
       }
-      self.props.dispatch({type: deps.gridResized, nCols});
     }
+  }
+  function onResizeGrid () {
+    const {nColsTemp} = self.props.workspace;
+    self.props.dispatch({type: deps.gridResized, nCols: nColsTemp});
   }
   function onSelectRow (event) {
     const row = parseInt(event.currentTarget.getAttribute('data-row'));

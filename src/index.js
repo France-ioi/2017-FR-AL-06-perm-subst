@@ -58,7 +58,7 @@ function TaskBundle (bundle, deps) {
   bundle.defineView('Task', IntroSelector, Intro);
 
   const WorkspaceActions = bundle.pack('submitAnswer', 'SaveButton',
-    'gridMounted', 'gridScrolled', 'gridResized',
+    'gridMounted', 'gridScrolled', 'resizeGrid', 'gridResized',
     'colSelected', 'rowSelected', 'modeChanged', 'rowMoved', 'colMoved',
     'substItemsSwapped', 'substItemLocked', 'cipherTextChanged',
     'solveSubst', 'solvePerm', 'Answer'
@@ -94,13 +94,22 @@ function TaskBundle (bundle, deps) {
     return updateWorkspace(state);
   });
 
+  bundle.defineAction('resizeGrid', 'Grid.Resize');
+  bundle.addReducer('resizeGrid', function (state, action) {
+    const {nCols} = action;
+    return update(state, {workspace: {nColsTemp: {$set: nCols}}});
+  });
+
   bundle.defineAction('gridResized', 'Grid.Resized');
   bundle.addReducer('gridResized', function (state, action) {
     const {nCols} = action;
     const dump = makeDump(state.task, nCols);
     /* Preserve the substitution. */
     dump.substitution = state.dump.substitution;
-    return updateWorkspace(update(state, {dump: {$set: dump}}));
+    return updateWorkspace(update(state, {
+      dump: {$set: dump},
+      workspace: {nColsTemp: {$set: nCols}}
+    }));
   });
 
   bundle.defineAction('rowSelected', 'Grid.Row.Selected');
@@ -346,6 +355,7 @@ function initWorkspace (state, dump) {
   const workspace = {
     cells,
     mode: 'rows',
+    nColsTemp: dump.nCols,
     hPos: 0,
     vPos: 0,
     maxVisibleRows: 12,
