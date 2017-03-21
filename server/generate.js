@@ -162,10 +162,17 @@ function generate (params, seed, callback) {
    answers.nbCols = nbCols;
    var strSentences = "";
    answers.sentences = [];
+   var shuffledSentences = shuffleArray(sentences, rng);
+   var curSentence = 0;
    for (var iSentence = 0; iSentence < 10; iSentence++) {
       var sentence = "";
-      while (sentence.length < 30 || sentence.length >= nbCols) {
-         sentence = sentences[intRand(rng, sentences.length)].toUpperCase();
+      var minLength = 30;
+      if (iSentence <= 2) {
+         minLength = 42;
+      }
+      while (sentence.length < minLength || sentence.length >= nbCols) {
+         sentence = sentences[curSentence].toUpperCase();
+         curSentence++;
       }
       sentence = cleanUpSpecialChars(sentence, true);
       sentence += pad(nbCols - sentence.length)+ "\n";
