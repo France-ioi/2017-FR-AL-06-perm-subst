@@ -326,7 +326,12 @@ function workspaceLoaded (state, dump) {
   if (!dump.answer) {
     dump = {...dump, answer: blankAnswer};
   }
-  return updateWorkspace(state, dump);
+  state = updateWorkspace(state, dump);
+  /* Reset nColsTemp in workspace */
+  state = update(state, {
+    workspace: {nColsTemp: {$set: state.dump.nCols}}
+  });
+  return state;
 }
 
 function isWorkspaceReady (state) {
