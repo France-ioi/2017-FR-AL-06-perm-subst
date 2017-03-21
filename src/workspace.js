@@ -74,6 +74,7 @@ export const Workspace = deps => EpicComponent(function (self) {
             </div>
           </div>
         </div>
+        {<div className="saveBlock"><deps.SaveButton/></div>}
         {false && <div className="panel panel-default">
           <div className="panel-body">
             <textarea rows='10' cols='60' value={self.props.task.cipher_text} onChange={onCipherTextChanged}/>
