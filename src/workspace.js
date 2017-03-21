@@ -113,7 +113,7 @@ export const Workspace = deps => EpicComponent(function (self) {
           element.scrollLeft = firstCol * cellWidth;
         }
         if (col > frame.lastCol - 1 - selectionHalo) {
-          const firstRow = Math.max(0, col - maxVisibleCols + selectionHalo);
+          const firstCol = Math.max(0, col - maxVisibleCols + selectionHalo);
           element.scrollLeft = firstCol * cellWidth;
         }
       }
