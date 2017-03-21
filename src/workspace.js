@@ -88,6 +88,11 @@ export const Workspace = deps => EpicComponent(function (self) {
 
   function refGrid (element) {
     const grid = element && {
+      scrollTo: function (row, col) {
+        console.log('scrollTo', element, row, col);
+        element.scrollTop = row * cellHeight;
+        element.scrollLeft = col * cellWidth;
+      },
       ensureRowVisible: function (row) {
         const frame = self.props.workspace.view.narrowFrame;
         const {maxVisibleRows, selectionHalo} = self.props.workspace;

@@ -225,9 +225,16 @@ function TaskBundle (bundle, deps) {
     yield takeLatest(deps.gridMounted, function* (action) {
       const {grid} = action;
       if (grid) {
+        const hPos = yield select(state => state.workspace.hPos);
+        const vPos = yield select(state => state.workspace.vPos);
+        grid.scrollTo(vPos, hPos);
         yield takeEvery([deps.rowSelected, deps.rowMoved], function* (action) {
           const row = yield select(state => state.workspace.selectedRow);
           grid.ensureRowVisible(row);
+        });
+        yield takeEvery([deps.colSelected, deps.colMoved], function* (action) {
+          const col = yield select(state => state.workspace.selectedCol);
+          grid.ensureColVisible(col);
         });
       }
     });
