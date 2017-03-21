@@ -13,14 +13,14 @@ export default function (bundle, deps) {
   bundle.defineAction('answerChanged', 'Answer.Changed');
   bundle.addReducer('answerChanged', function (state, action) {
     const {key, value} = action;
-    return update(state, {answer: {[key]: {$set: value}}});
+    return update(state, {dump: {answer: {[key]: {$set: value}}}});
   });
 
 };
 
 function AnswerSelector (state, props) {
-  const {answer, submitAnswer, score} = state;
-  return {answer, submitAnswer, score};
+  const {dump, submitAnswer, score} = state;
+  return {answer: dump.answer, submitAnswer, score};
 }
 
 const Answer = actions => EpicComponent(self => {

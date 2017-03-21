@@ -51,16 +51,7 @@ function TaskBundle (bundle, deps) {
       ...state,
       workspaceOperations,
       submitAnswer: {},
-      showSolve: false,
-      answer: {
-        "nbCols": "",
-        "sentence": "",
-        "countries": "",
-        "animals": "",
-        "user2Password": "",
-        "user1Password": "",
-        "gridTotal": ""
-      }
+      showSolve: false
     };
   });
 
@@ -296,6 +287,16 @@ function TaskBundle (bundle, deps) {
 const alphabet = makeAlphabet('abcdefghijklmnopqrstuvwxyz0123456789 .-+|'.split(''));
 const paddingCell = {symbol: ' ', locked: false, padding: true};
 
+const blankAnswer =  {
+  "nbCols": "",
+  "sentence": "",
+  "countries": "",
+  "animals": "",
+  "user2Password": "",
+  "user1Password": "",
+  "gridTotal": ""
+};
+
 const identitySubstitution = alphabet.symbols.map(function (symbol) {
   return {symbol, locked: false};
 });
@@ -313,6 +314,9 @@ function taskUpdated (state) {
 }
 
 function workspaceLoaded (state, dump) {
+  if (!dump.answer) {
+    dump = {...dump, answer: blankAnswer};
+  }
   return updateWorkspace(state, dump);
 }
 
@@ -326,7 +330,7 @@ function makeDump (task, nCols) {
   const rowPerm = range(0, nRows).toArray();
   const colPerm = range(0, nCols).toArray();
   const substitution = identitySubstitution;
-  return {nCols, nRows, rowPerm, colPerm, substitution};
+  return {nCols, nRows, rowPerm, colPerm, substitution, answer: blankAnswer};
 }
 
 function reconcileDump (task, dump) {
