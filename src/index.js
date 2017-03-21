@@ -2,9 +2,10 @@
 import runTask from 'alkindi-task-lib';
 import update from 'immutability-helper';
 import range from 'node-range';
-import {select, takeLatest, takeEvery} from 'redux-saga/effects';
+import {select, takeLatest, takeEvery, put} from 'redux-saga/effects';
 import {DragDropContext} from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
+import {eventChannel} from 'redux-saga';
 
 import 'font-awesome/css/font-awesome.css';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -235,6 +236,30 @@ function TaskBundle (bundle, deps) {
   bundle.include(AnswerBundle);
   bundle.use('Answer');
 
+  /* auto-save */
+
+  bundle.use('saveWorkspace');
+  bundle.addSaga(function* () {
+    const channel = intervalChannel(5 * 60 * 1000); // every 5 minutes
+    yield takeEvery(channel, function* () {
+      const isUnsaved = yield select(state => state.isWorkspaceUnsaved);
+      if (isUnsaved) {
+        yield put({type: deps.saveWorkspace});
+      }
+    });
+  });
+
+  function intervalChannel (millis) {
+    return eventChannel(function (emitter) {
+      const interval = setInterval(function () {
+        emitter(true);
+      }, millis);
+      return function () {
+        clearInterval(interval);
+      };
+    });
+  }
+
   /* DEVELOPMENT ACTIONS */
 
   bundle.defineAction('showSolve', 'Task.Solve.Show');
@@ -275,7 +300,9 @@ function taskLoaded (state) {
 
 function taskUpdated (state) {
   const dump = reconcileDump(state.task, state.dump);
-  return initWorkspace(state, dump);
+  const cells = textToCells(alphabet, state.task.cipher_text);
+  const workspace = {...state.workspace, cells};
+  return updateWorkspace({...state, workspace}, dump);
 }
 
 function workspaceLoaded (state, dump) {
