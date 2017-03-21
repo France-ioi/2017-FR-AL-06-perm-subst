@@ -1,4 +1,14 @@
 #container { width: 860px;}
+
+.taskHeader {
+    margin-bottom: 10px;
+}
+.saveBlock {
+    display: inline-block;
+    line-height: 34px;
+    margin: 0 10px 0 0;
+}
+
 .taskInstructions {
     text-align: justify;
     margin-bottom: 3em;
