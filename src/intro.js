@@ -1,9 +1,10 @@
 
 import React from 'react';
+import {connect} from 'react-redux';
 import EpicComponent from 'epic-component';
 import url from 'url';
 
-export default EpicComponent(self => {
+export const Task = EpicComponent(self => {
 
   self.render = function () {
     function asset (path) {
@@ -62,3 +63,15 @@ export default EpicComponent(self => {
     );
   };
 });
+
+function IntroSelector (state) {
+  const {taskBaseUrl} = state;
+  return {baseUrl: taskBaseUrl};
+}
+
+export default {
+  views: {
+     Task: connect(IntroSelector)(Task)
+  },
+};
+

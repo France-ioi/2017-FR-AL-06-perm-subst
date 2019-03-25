@@ -55,7 +55,6 @@ function TaskBundle (bundle, deps) {
     };
   });
 
-  bundle.defineView('Task', IntroSelector, Intro);
 
   const WorkspaceActions = bundle.pack('submitAnswer', 'SaveButton',
     'gridMounted', 'gridScrolled', 'resizeGrid', 'gridResized',
@@ -63,6 +62,7 @@ function TaskBundle (bundle, deps) {
     'substItemsSwapped', 'substItemLocked', 'cipherTextChanged',
     'solveSubst', 'solvePerm', 'Answer'
   );
+  console.log('WorkspaceActions :', WorkspaceActions);
   bundle.defineView('Workspace', WorkspaceSelector, Workspace(WorkspaceActions));
 
   bundle.defineAction('modeChanged', 'Grid.Mode.Changed');
@@ -393,11 +393,6 @@ function updateWorkspace (state, dump) {
     workspace.view = {frame, rows};
   }
   return state;
-}
-
-function IntroSelector (state) {
-  const {task, taskBaseUrl} = state;
-  return {baseUrl: taskBaseUrl};
 }
 
 function WorkspaceSelector (state, props) {
