@@ -151,7 +151,7 @@ function genCountries(nbCols, answers, rng) {
    return strNumbers;
 }
 
-function generate (params, seed, callback) {
+function generate (seed) {
 
    const rng = seedrandom(seed);
 
@@ -207,17 +207,18 @@ function generate (params, seed, callback) {
    rows = applyPermutationToColumns(rows, colsPermutation);
    var shuffledText = concatRows(rows);
 
-   var task = {
+   var publicData = {
       cipher_text: shuffledText
    };
-   var full_task = Object.assign({
+   var privateData ={
       clearText: stringAll,
       substitution,
       rowsPermutation,
       colsPermutation,
       answers
-   }, task);
-   callback(null, {task, full_task});
+   };
+
+   return {publicData, privateData};
 }
 
 // Run this module directly with node to test it.

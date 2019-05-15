@@ -1,44 +1,81 @@
+const generate = require("./generate");
+const {cleanUpSpecialChars} = require("./utils");
 
-const path = require('path');
-const express = require('express');
-const alkindiTaskServer = require('alkindi-task-lib/server');
+module.exports.config = {
+  cache_task_data: false
+};
 
-const generate = require('./generate');
-const {cleanUpSpecialChars} = require('./utils');
+module.exports.taskData = function (args, callback) {
+  const {publicData} = generateTaskData(args.task.random_seed);
+  callback(null, publicData);
+};
 
-alkindiTaskServer({
-  webpackConfig: require('../webpack.config.js'),
-  generate,
-  gradeAnswer,
-  grantHint,
-  serverHook: function (app) {
-    app.use('/images', express.static(path.resolve(path.dirname(__dirname), 'images')));
-  }
-});
+module.exports.requestHint = function (args, callback) {
+  return callback(new Error("no hints"));
+};
 
-function gradeAnswer (full_task, task, answer, callback) {
-  const feedback = {};
-  let score = 0;
-  let is_full_solution = true;
-  let is_solution = false;
-  Object.keys(checkers).forEach(function (key) {
-    const error = checkers[key](full_task.answers, answer[key]);
-    if (!error) {
-      score += 100;
-      is_solution = true;
-    } else {
-      is_full_solution = false;
-      feedback[key] = error;
+module.exports.gradeAnswer = function (args, task_data, callback) {
+  try {
+    const {
+      privateData: {answers}
+    } = generateTaskData(args.task.random_seed);
+
+    const answer = JSON.parse(args.answer.value);
+
+    const feedback = {};
+    let score = 0;
+    let is_full_solution = true;
+    let is_solution = false;
+    Object.keys(checkers).forEach(function (key) {
+      const error = checkers[key](answers, answer[key]);
+      if (!error) {
+        score += 100;
+        is_solution = true;
+      } else {
+        is_full_solution = false;
+        feedback[key] = error;
+      }
+    });
+    feedback.result = is_solution
+      ? is_full_solution
+        ? "exact"
+        : "partial"
+      : "wrong";
+
+    let message = "";
+
+    switch (feedback.result) {
+      case "exact": {
+        message = "Vos réponses sont exactes !";
+        break;
+      }
+      case "partial": {
+        message = "Vos réponses contiennent des erreurs.";
+        break;
+      }
+      case "wrong": {
+        message = "Vos réponses sont incorrectes.";
+        break;
+      }
     }
-  });
-  feedback.result = is_solution ? (is_full_solution ? 'exact' : 'partial') : 'wrong';
-  callback(null, {
-    success: true, feedback, score, is_solution, is_full_solution
-  });
-}
 
-function grantHint (full_task, task, query, callback) {
-  callback(null, {success: false});
+    callback(null, {
+      score,
+      message
+    });
+  } catch (error) {
+    callback(error, null);
+  }
+};
+
+/**
+ * task methods
+ */
+
+function generateTaskData (random_seed) {
+  const {publicData, privateData} = generate(random_seed);
+  publicData.hints = {};
+  return {publicData, privateData};
 }
 
 const checkers = {
@@ -99,11 +136,13 @@ const checkers = {
 };
 
 function words (input) {
-  return cleanUpSpecialChars(input.trim(), true).split(/\s+/).sort();
+  return cleanUpSpecialChars(input.trim(), true)
+    .split(/\s+/)
+    .sort();
 }
 
 function eqInt (expected, submitted) {
-  if (submitted === NaN || submitted !== Math.trunc(submitted)) {
+  if (isNaN(submitted) || submitted !== Math.trunc(submitted)) {
     return "réponse invalide, un nombre entier est attendu";
   }
   if (expected !== submitted) {
