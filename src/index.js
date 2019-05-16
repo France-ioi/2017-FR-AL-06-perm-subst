@@ -72,18 +72,17 @@ function taskRefreshReducer (state, _action) {
 }
 
 function getTaskAnswer (state) {
-  return state.dump.answer;
+  return {dump: state.dump};
 }
 
-function taskAnswerLoaded (state, {payload: {answer}}) {
-  return update(state, {dump: {answer: {$set: answer}}});
-}
-
-function getTaskState (state) {
-  return state.dump;
-}
-
-function taskStateLoaded (state, {payload: {dump}}) {
+function taskAnswerLoaded (
+  state,
+  {
+    payload: {
+      answer: {dump}
+    }
+  }
+) {
   if (!dump.answer) {
     dump = {...dump, answer: blankAnswer};
   }
@@ -92,6 +91,14 @@ function taskStateLoaded (state, {payload: {dump}}) {
   state = update(state, {
     workspace: {nColsTemp: {$set: state.dump.nCols}}
   });
+  return state;
+}
+
+function getTaskState (_state) {
+  return {};
+}
+
+function taskStateLoaded (state, {payload: {_dump}}) {
   return state;
 }
 

@@ -3,18 +3,14 @@ import classnames from "classnames";
 import {DragSource, DropTarget} from "react-dnd";
 import {alphabet} from "./utils";
 
-export default props => {
-  const {substitution, onLock, onSwapPairs} = props;
-
-  const cols = props.cols || substitution.length;
-
-  const onDrop = (dragSource, dragTarget) => {
+export default class SubstEditor extends React.PureComponent {
+  onDrop = (dragSource, dragTarget) => {
     const rank1 = dragTarget.source;
     const rank2 = dragSource.source;
-    onSwapPairs(rank1, rank2);
+    this.props.onSwapPairs(rank1, rank2);
   };
 
-  const renderSubstCell = (targetCell, sourceRank) => {
+  renderSubstCell = (targetCell, sourceRank) => {
     const sourceSymbol = alphabet.symbols[sourceRank];
     const targetSymbol = targetCell.symbol;
     const isLocked = targetCell.locked;
@@ -32,78 +28,86 @@ export default props => {
           source={sourceRank}
           target={targetCell}
           targetSymbol={targetSymbol}
-          onDrop={onDrop}
-          onLock={onLock}
+          onDrop={this.onDrop}
+          onLock={this.onLock}
           locked={isLocked}
         />
       </div>
     );
   };
 
-  const groups = [];
-  let groupStart = 0;
+  render () {
+    const {substitution} = this.props;
+    const cols = this.props.cols || substitution.length;
+    const groups = [];
+    let groupStart = 0;
 
-  while (groupStart < substitution.length) {
-    const group = substitution.slice(groupStart, groupStart + cols);
-    groups.push(
-      <div key={groupStart}>
-        <div className="subst-label">
-          <div className="subst-source">{"chiffré"}</div>
-          <div className="subst-target">{"clair"}</div>
+    while (groupStart < substitution.length) {
+      const group = substitution.slice(groupStart, groupStart + cols);
+      groups.push(
+        <div key={groupStart}>
+          <div className="subst-label">
+            <div className="subst-source">{"chiffré"}</div>
+            <div className="subst-target">{"clair"}</div>
+          </div>
+          {group.map((targetCell, sourceRank) => {
+            return this.renderSubstCell(targetCell, groupStart + sourceRank);
+          })}
         </div>
-        {group.map(function (targetCell, sourceRank) {
-          return renderSubstCell(targetCell, groupStart + sourceRank);
-        })}
-      </div>
-    );
-    groupStart += cols;
+      );
+      groupStart += cols;
+    }
+
+    return <div className="subst">{groups}</div>;
   }
+}
 
-  return <div className="subst">{groups}</div>;
-};
-
-const BareSubstTarget = props => {
-  const {
-    source,
-    targetSymbol,
-    locked,
-    isDragging,
-    connectDropTarget,
-    connectDragSource
-  } = props;
-
-  const onLock = event => {
+class BareSubstTarget extends React.PureComponent {
+  onLock = event => {
     event.preventDefault();
-    props.onLock(source);
+    this.props.onLock(this.props.source);
   };
 
-  const isDragTarget = typeof connectDropTarget === "function";
-  const isDragSource = typeof connectDragSource === "function";
-  const classes = [
-    "subst-target",
-    isDragSource && "draggable",
-    isDragging && "dragging"
-  ];
-  let el = (
-    <div className={classnames(classes)}>
-      <div className="subst-char">
-        <div className="subst-symbol">{targetSymbol}</div>
-        <div className="subst-lock" onClick={onLock}>
-          <i
-            className={classnames(["fa", locked ? "fa-lock" : "fa-unlock-alt"])}
-          />
+  render () {
+    const {
+      targetSymbol,
+      locked,
+      isDragging,
+      connectDropTarget,
+      connectDragSource
+    } = this.props;
+
+    const isDragTarget = typeof connectDropTarget === "function";
+    const isDragSource = typeof connectDragSource === "function";
+    const classes = [
+      "subst-target",
+      isDragSource && "draggable",
+      isDragging && "dragging"
+    ];
+    let el = (
+      <div className={classnames(classes)}>
+        <div className="subst-char">
+          <div className="subst-symbol">{targetSymbol}</div>
+          <div className="subst-lock" onClick={this.onLock}>
+            <i
+              className={classnames([
+                "fa",
+                locked ? "fa-lock" : "fa-unlock-alt"
+              ])}
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
-  if (isDragTarget) {
-    el = connectDropTarget(el);
+    );
+    if (isDragTarget) {
+      el = connectDropTarget(el);
+    }
+    if (isDragSource) {
+      el = connectDragSource(el);
+    }
+    return el;
   }
-  if (isDragSource) {
-    el = connectDragSource(el);
-  }
-  return el;
-};
+}
 
 function sourceCollect (connect, monitor) {
   return {

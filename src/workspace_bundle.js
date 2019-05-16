@@ -29,12 +29,12 @@ const scrollSpace = 20;
 class Workspace extends React.PureComponent {
   refGrid = element => {
     const grid = element && {
-      scrollTo:  (row, col) =>{
+      scrollTo: (row, col) => {
         console.log("scrollTo", element, row, col);
         element.scrollTop = row * cellHeight;
         element.scrollLeft = col * cellWidth;
       },
-      ensureRowVisible: (row) => {
+      ensureRowVisible: row => {
         const frame = this.props.workspace.view.narrowFrame;
         const {maxVisibleRows, selectionHalo} = this.props.workspace;
         if (row < frame.firstRow + selectionHalo) {
@@ -46,7 +46,7 @@ class Workspace extends React.PureComponent {
           element.scrollTop = firstRow * cellHeight;
         }
       },
-      ensureColVisible: (col) => {
+      ensureColVisible: col => {
         const frame = this.props.workspace.view.narrowFrame;
         const {maxVisibleCols, selectionHalo} = this.props.workspace;
         if (col < frame.firstCol + selectionHalo) {
@@ -442,9 +442,8 @@ class Workspace extends React.PureComponent {
   }
 }
 
-const RowsView = props => {
-  const {rows, substitution, selectedRow, onSelectRow} = props;
-  const renderRowBgStyle = row => {
+class RowsView extends React.PureComponent {
+  renderRowBgStyle = row => {
     const {x1, x2} = row;
     return {
       left: `0px`,
@@ -453,30 +452,33 @@ const RowsView = props => {
       height: `${cellHeight - innerPadding * 2}px`
     };
   };
-  return (
-    <div className="text-rows no-select">
-      {rows.map(row => (
-        <div
-          key={row.key}
-          className={classnames([
-            "text-row",
-            row.y === selectedRow && "text-row-selected"
-          ])}
-          style={renderRowStyle(row)}
-          data-row={row.y}
-          onClick={onSelectRow}
-        >
-          <div className="text-row-bg" style={renderRowBgStyle(row)} />
-          {row.cols.map(col => renderCell(col, substitution))}
-        </div>
-      ))}
-    </div>
-  );
-};
 
-const ColsView = props => {
-  const {cols, substitution, selectedCol, onSelectCol} = props;
-  const renderColBgStyle = row => {
+  render () {
+    const {rows, substitution, selectedRow, onSelectRow} = this.props;
+    return (
+      <div className="text-rows no-select">
+        {rows.map(row => (
+          <div
+            key={row.key}
+            className={classnames([
+              "text-row",
+              row.y === selectedRow && "text-row-selected"
+            ])}
+            style={renderRowStyle(row)}
+            data-row={row.y}
+            onClick={onSelectRow}
+          >
+            <div className="text-row-bg" style={this.renderRowBgStyle(row)} />
+            {row.cols.map(col => renderCell(col, substitution))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+}
+
+class ColsView extends React.PureComponent {
+  renderColBgStyle = row => {
     const {y1, y2} = row;
     return {
       left: `${innerPadding}px`,
@@ -485,45 +487,51 @@ const ColsView = props => {
       height: `${(y2 - y1 + 1) * cellHeight}px`
     };
   };
-  return (
-    <div className="text-cols no-select">
-      {cols.map(col => (
-        <div
-          key={col.key}
-          className={classnames([
-            "text-col",
-            col.x === selectedCol && "text-col-selected"
-          ])}
-          style={renderColStyle(col)}
-          data-col={col.x}
-          onClick={onSelectCol}
-        >
-          <div className="text-col-bg" style={renderColBgStyle(col)} />
-          {col.rows.map(row => renderCell(row, substitution))}
-        </div>
-      ))}
-    </div>
-  );
-};
 
-const TextView = props => {
-  const {rows, substitution} = props;
-  return (
-    <div className="text-normal">
-      {rows.map(row => (
-        <div
-          key={row.key}
-          className="text-row"
-          style={renderRowStyle(row)}
-          data-row={row.y}
-        >
-          {row.cols.map(col => renderCell(col, substitution))}
-          <br />
-        </div>
-      ))}
-    </div>
-  );
-};
+  render () {
+    const {cols, substitution, selectedCol, onSelectCol} = this.props;
+    return (
+      <div className="text-cols no-select">
+        {cols.map(col => (
+          <div
+            key={col.key}
+            className={classnames([
+              "text-col",
+              col.x === selectedCol && "text-col-selected"
+            ])}
+            style={renderColStyle(col)}
+            data-col={col.x}
+            onClick={onSelectCol}
+          >
+            <div className="text-col-bg" style={this.renderColBgStyle(col)} />
+            {col.rows.map(row => renderCell(row, substitution))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+}
+
+class TextView extends React.PureComponent {
+  render () {
+    const {rows, substitution} = this.props;
+    return (
+      <div className="text-normal">
+        {rows.map(row => (
+          <div
+            key={row.key}
+            className="text-row"
+            style={renderRowStyle(row)}
+            data-row={row.y}
+          >
+            {row.cols.map(col => renderCell(col, substitution))}
+            <br />
+          </div>
+        ))}
+      </div>
+    );
+  }
+}
 
 function renderCell (cell, substitution) {
   const {content} = cell;
