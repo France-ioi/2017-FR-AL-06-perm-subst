@@ -1,5 +1,12 @@
 import algoreaReactTask from "./algorea_react_task";
-import {textToCells, alphabet, makeDump, blankAnswer, initWorkspace, updateWorkspace} from "./utils";
+import {
+  textToCells,
+  alphabet,
+  makeDump,
+  blankAnswer,
+  initWorkspace,
+  updateWorkspace
+} from "./utils";
 
 import "font-awesome/css/font-awesome.css";
 import "bootstrap/dist/css/bootstrap.css";
@@ -68,7 +75,7 @@ function getTaskAnswer (state) {
   return state.dump.answer;
 }
 
-function taskAnswerLoaded (state, answer) {
+function taskAnswerLoaded (state, {payload: {answer}}) {
   return update(state, {dump: {answer: {$set: answer}}});
 }
 
@@ -76,7 +83,7 @@ function getTaskState (state) {
   return state.dump;
 }
 
-function taskStateLoaded (state, dump) {
+function taskStateLoaded (state, {payload: {dump}}) {
   if (!dump.answer) {
     dump = {...dump, answer: blankAnswer};
   }
@@ -91,4 +98,3 @@ function taskStateLoaded (state, dump) {
 export function run (container, options) {
   return algoreaReactTask(container, options, TaskBundle);
 }
-
